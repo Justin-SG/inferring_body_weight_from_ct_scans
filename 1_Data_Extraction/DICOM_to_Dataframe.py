@@ -1,111 +1,139 @@
 import os
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+import numpy as np
 import pandas as pd
+from pydicom import dcmread, Sequence
+from tqdm import tqdm
 
 from util.NativeTypeConverter import convert_to_native_type
-from tqdm import tqdm
-from pathlib import Path
-from pydicom import dcmread, Sequence
-
-# Function to get all DICOM files in the DICOMDIR structure
-def get_dicom_files(dicomdir):
-    dicom_files = []
-    # Iterate over each patient in the DICOMDIR
-    for patient in tqdm(dicomdir.patient_records, desc="CT-Scans"):
-        # Get DICOM files for the current patient and extend the list
-        dicom_files.extend(get_patient_dicom_files(patient))
-    return dicom_files
 
 
-# Function to get DICOM files for a specific patient
-def get_patient_dicom_files(patient):
-    dicom_files = []
-    # Iterate over each study for the patient
+def get_dicomdir_paths(path):
+    """Retrieve all DICOMDIR paths from the specified directory."""
+    return list(Path(path).rglob('DICOMDIR'))
+
+
+def get_dicom_dataframe(path):
+    """Create a DataFrame containing information from DICOMDIR files in the specified directory."""
+    dicomdir_paths = get_dicomdir_paths(path)
+    scans = []
+
+    for dicomdir_path in dicomdir_paths:
+        dicomdir = dcmread(dicomdir_path)
+        scans.extend(extract_scans_from_dicomdir(dicomdir))
+
+    return pd.DataFrame(scans)
+
+
+def read_image(instance_path):
+    """Read a DICOM image from the given path."""
+    return dcmread(instance_path)
+
+
+def extract_patient_data(patient, root_dir, dicomdir_filename):
+    """Extract scan data from a patient record."""
+    scans = []
+    scan_base = {
+        'Dicomdir': dicomdir_filename,
+        'PatientId': patient.PatientID,
+    }
+
     for study in patient.children:
-        # Check if the record type is "STUDY"
-        if study.DirectoryRecordType != "STUDY":
-            continue  # Skip if it's not a study
-        # Get DICOM files for the current study and extend the list
-        dicom_files.extend(get_study_dicom_files(study))
-    return dicom_files
+        if study.DirectoryRecordType == "STUDY":
+            scan_base['StudyId'] = study.StudyInstanceUID
+
+            for series in study.children:
+                if series.DirectoryRecordType == "SERIES":
+                    scan_base['SeriesId'] = series.SeriesInstanceUID
+                    scans.extend(extract_series_data(series, scan_base, root_dir))
+
+    return scans
 
 
-# Function to get DICOM files for a specific study
-def get_study_dicom_files(study):
-    dicom_files = []
-    # Iterate over each series in the study
-    for series in study.children:
-        # Check if the record type is "SERIES"
-        if series.DirectoryRecordType != "SERIES":
-            continue  # Skip if it's not a series
-        # Get DICOM files for the current series and extend the list
-        dicom_files.extend(get_series_dicom_files(series))
-    return dicom_files
+def extract_series_data(series, scan_base, root_dir):
+    """Extract scan data from a series record."""
+    scan = scan_base.copy()
+    instance_paths = [
+        os.path.join(root_dir, *image["ReferencedFileID"].value)
+        for image in series.children if image.DirectoryRecordType == "IMAGE"
+    ]
+
+    with ThreadPoolExecutor() as executor:
+        instances = list(executor.map(read_image, instance_paths))
+
+    # Threading may cause out-of-order slices therefore
+    # sort the instances by SliceLocation to ensure the slices are in the correct order again
+    instances.sort(key=lambda instance: instance.SliceLocation)
+
+    pixel_array_flat = np.concatenate([instance.pixel_array.flatten(order='C') for instance in instances])
+
+    scan.update(get_fields_for_dataset(instances[0]))
+    scan['PixelArrayFlat'] = pixel_array_flat
+    scan['SliceCount'] = len(instances)
+
+    return [scan]
 
 
-# Function to get DICOM files for a specific series
-def get_series_dicom_files(series):
-    dicom_files = []
-    # Iterate over each image in the series
-    for image in series.children:
-        # Check if the record type is "IMAGE"
-        if image.DirectoryRecordType != "IMAGE":
-            continue  # Skip if it's not an image
-        # Get DICOM file for the current image and append to the list
-        dicom_files.append(get_dicom_for_image(image))
-    return dicom_files
+def extract_scans_from_dicomdir(dicomdir):
+    """Extract CT scan information from a DICOMDIR object."""
+    root_dir = Path(dicomdir.filename).resolve().parent
+    scans = []
+
+    for patient in tqdm(dicomdir.patient_records, desc=f'Getting CT-Scans from {dicomdir.filename}'):
+        scans.extend(extract_patient_data(patient, root_dir, dicomdir.filename))
+
+    return scans
 
 
-# Function to get DICOM information for a specific image
-def get_dicom_for_image(image):
-    # Read the DICOM file using pydicom
-    instance = dcmread(os.path.join(root_dir, *image["ReferencedFileID"].value))
-    # Extract DICOM metadata excluding the pixel data
-    slice = get_fields_for_dataset(instance)
-    # Add the file meta information
-    slice.update(get_fields_for_dataset(instance.file_meta, 'FileMetaInformation'))
-    # Add the pixel array to the metadata
-    slice['PixelArrayFlat'] = instance.pixel_array.flatten()  # Reconstruction by Rows and Columns Fields
-    return slice
-
-
-# Function to extract all DICOM fields from a pydicom dataset
 def get_fields_for_dataset(dataset, prefix=''):
-    dataset_dict = dict()
+    """Extract all fields from a pydicom dataset into a dictionary."""
+    dataset_dict = {}
+
     for field in dataset.dir():
+        if field in ['PixelData', 'PatientID']:
+            continue
+
         value = getattr(dataset, field, None)
-
-        if field == 'PixelData':  # Skip PixelData field (added later)
-            continue
-        if field == 'ConvolutionKernel':  # = Multivalue of strings (feather can't serialize string lists)
-            # Add all Kernels as separate fields
+        if field == 'ConvolutionKernel' and value is not None:
             for i, kernel in enumerate(value):
-                dataset_dict[f'ConvolutionKernel_{i}'] = str(kernel)
+                dataset_dict[f'{prefix}ConvolutionKernel_{i}'] = str(kernel)
             continue
 
-        if type(value) is Sequence:  # List of Datasets
+        if isinstance(value, Sequence):
             for sub_dataset in value:
-                dataset_dict.update(get_fields_for_dataset(sub_dataset, field))
+                dataset_dict.update(get_fields_for_dataset(sub_dataset, f'{prefix}{field}.'))
         else:
             dataset_dict[f'{prefix}{field}'] = convert_to_native_type(value)
+
     return dataset_dict
 
 
-# Read DICOMDIR file
-dicomdir_path = '../../Scans/2022-01/DICOMDIR'
-dicomdir = dcmread(dicomdir_path)  # Read the DICOMDIR file
-root_dir = Path(dicomdir_path).resolve().parent  # Get the parent directory of DICOMDIR
-
-# Get all the DICOM files in the DICOMDIR
-scans = get_dicom_files(dicomdir)
-
-# Convert the list of dictionaries to a pandas DataFrame
-dicom_df = pd.DataFrame(scans)
-
-print("Compressing the DataFrame...")
-# Save the DataFrame to a Feather file (lightweight binary format)
-dicom_df.to_feather(f'{root_dir}_dicom_df.feather',  version = 2, compression='zstd')
-print("DataFrame compressed successfully!")
+# from https://stackoverflow.com/questions/17315737/split-a-large-pandas-dataframe
+def split_dataframe(df, chunk_size=100):
+    chunks = list()
+    num_chunks = len(df) // chunk_size + 1
+    for i in range(num_chunks):
+        chunks.append(df[i * chunk_size:(i + 1) * chunk_size])
+    return chunks
 
 
-# TODO: Find out why ImageType (string list) can be serialized but ConvolutionKernel can not
+def store_dataframe_chunks(chunks, filename, destination):
+    for i, chunk in tqdm(enumerate(chunks), desc='Storing DataFrame chunks'):
+        chunk.to_feather(f'{destination}/{filename}_{i}.feather', version=2, compression='zstd')
 
+
+# Main script
+if __name__ == "__main__":
+    root_dir = '../../Scans'
+    destination = 'Data'
+    df = get_dicom_dataframe(root_dir)
+
+    # Create the output directory if it does not exist
+    if not os.path.exists(destination):
+        os.mkdir(destination)
+
+    print("Compressing the DataFrame...")
+    store_dataframe_chunks(split_dataframe(df), 'dicom_df', destination)
+    print("DataFrame compressed successfully!")
