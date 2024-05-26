@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     # Create the output directory if it does not exist
     if not os.path.exists(destination):
-        os.mkdir(destination)
+        os.makedirs(destination, exist_ok=True)
 
     print("Compressing the DataFrame...")
     store_dataframe_chunks(split_dataframe(df), 'dicom_df', destination)
