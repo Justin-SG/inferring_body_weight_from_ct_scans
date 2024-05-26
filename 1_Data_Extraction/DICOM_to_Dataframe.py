@@ -15,14 +15,14 @@ def get_dicomdir_paths(path):
     return list(Path(path).rglob('DICOMDIR'))
 
 
-def get_dicom_dataframe(path):
+def get_dicom_dataframe(path, read_images=True):
     """Create a DataFrame containing information from DICOMDIR files in the specified directory."""
     dicomdir_paths = get_dicomdir_paths(path)
     scans = []
 
     for dicomdir_path in dicomdir_paths:
         dicomdir = dcmread(dicomdir_path)
-        scans.extend(extract_scans_from_dicomdir(dicomdir))
+        scans.extend(extract_scans_from_dicomdir(dicomdir, read_images))
 
     return pd.DataFrame(scans)
 
@@ -32,7 +32,7 @@ def read_image(instance_path):
     return dcmread(instance_path)
 
 
-def extract_patient_data(patient, root_dir, dicomdir_filename):
+def extract_patient_data(patient, root_dir, dicomdir_filename, read_images=True):
     """Extract scan data from a patient record."""
     scans = []
     scan_base = {
@@ -47,42 +47,47 @@ def extract_patient_data(patient, root_dir, dicomdir_filename):
             for series in study.children:
                 if series.DirectoryRecordType == "SERIES":
                     scan_base['SeriesId'] = series.SeriesInstanceUID
-                    scans.extend(extract_series_data(series, scan_base, root_dir))
+                    scans.extend(extract_series_data(series, scan_base, root_dir, read_images))
 
     return scans
 
 
-def extract_series_data(series, scan_base, root_dir):
+def extract_series_data(series, scan_base, root_dir, read_images=True):
     """Extract scan data from a series record."""
     scan = scan_base.copy()
+
     instance_paths = [
         os.path.join(root_dir, *image["ReferencedFileID"].value)
         for image in series.children if image.DirectoryRecordType == "IMAGE"
     ]
 
-    with ThreadPoolExecutor() as executor:
-        instances = list(executor.map(read_image, instance_paths))
+    if read_images:
+        with ThreadPoolExecutor() as executor:
+            instances = list(executor.map(read_image, instance_paths))
 
-    # Threading may cause out-of-order slices therefore
-    # sort the instances by SliceLocation to ensure the slices are in the correct order again
-    instances.sort(key=lambda instance: instance.SliceLocation)
+        # Threading may cause out-of-order slices therefore
+        # sort the instances by SliceLocation to ensure the slices are in the correct order again
+        instances.sort(key=lambda instance: instance.SliceLocation)
 
-    pixel_array_flat = np.concatenate([instance.pixel_array.flatten(order='C') for instance in instances])
+        pixel_array_flat = np.concatenate([instance.pixel_array.flatten(order='C') for instance in instances])
+        scan.update(get_fields_for_dataset(instances[0]))
+        scan['PixelArrayFlat'] = pixel_array_flat
 
-    scan.update(get_fields_for_dataset(instances[0]))
-    scan['PixelArrayFlat'] = pixel_array_flat
-    scan['SliceCount'] = len(instances)
+    else:
+        scan.update(get_fields_for_dataset(read_image(instance_paths[0])))
+
+    scan['SliceCount'] = len(instance_paths)
 
     return [scan]
 
 
-def extract_scans_from_dicomdir(dicomdir):
+def extract_scans_from_dicomdir(dicomdir, read_images=True):
     """Extract CT scan information from a DICOMDIR object."""
     root_dir = Path(dicomdir.filename).resolve().parent
     scans = []
 
     for patient in tqdm(dicomdir.patient_records, desc=f'Getting CT-Scans from {dicomdir.filename}'):
-        scans.extend(extract_patient_data(patient, root_dir, dicomdir.filename))
+        scans.extend(extract_patient_data(patient, root_dir, dicomdir.filename, read_images))
 
     return scans
 
@@ -127,8 +132,8 @@ def store_dataframe_chunks(chunks, filename, destination):
 # Main script
 if __name__ == "__main__":
     root_dir = '../../Scans'
-    destination = 'Data'
-    df = get_dicom_dataframe(root_dir)
+    destination = 'Data/Metadata_Only'
+    df = get_dicom_dataframe(root_dir, read_images=False)
 
     # Create the output directory if it does not exist
     if not os.path.exists(destination):
