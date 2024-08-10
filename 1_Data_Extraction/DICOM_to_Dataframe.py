@@ -1,4 +1,5 @@
 import os
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from pydicom import dcmread, Sequence
 from tqdm import tqdm
 
 from util.NativeTypeConverter import convert_to_native_type
+from util.Counter import Counter
 
 
 def get_dicomdir_paths(path):
@@ -62,6 +64,7 @@ def extract_series_data(series, scan_base, root_dir, read_images=True):
     ]
 
     if read_images:
+        counter = Counter.count()
         with ThreadPoolExecutor() as executor:
             instances = list(executor.map(read_image, instance_paths))
 
@@ -69,9 +72,10 @@ def extract_series_data(series, scan_base, root_dir, read_images=True):
         # sort the instances by SliceLocation to ensure the slices are in the correct order again
         instances.sort(key=lambda instance: instance.SliceLocation)
 
-        pixel_array_flat = np.concatenate([instance.pixel_array.flatten(order='C') for instance in instances])
+        pixel_array_3d = np.stack([instance.pixel_array for instance in instances])
         scan.update(get_fields_for_dataset(instances[0]))
-        scan['PixelArrayFlat'] = pixel_array_flat
+        scan['PixelArrayFile'] = f'Scan_{counter}.npy'
+        store_pixel_array_to_file(f'./Data/PixelArray/{scan["PixelArrayFile"]}', pixel_array_3d)
 
     else:
         scan.update(get_fields_for_dataset(read_image(instance_paths[0])))
@@ -80,6 +84,14 @@ def extract_series_data(series, scan_base, root_dir, read_images=True):
 
     return [scan]
 
+
+def store_pixel_array_to_file(file_path, pixel_array):
+    """Store the pixel array of a scan to a file."""
+    # create the directory if it does not exist
+    create_path_if_not_exist(file_path)
+    file_path = Path(file_path)
+    np.save(file_path,
+            pixel_array)
 
 def extract_scans_from_dicomdir(dicomdir, read_images=True):
     """Extract CT scan information from a DICOMDIR object."""
@@ -128,17 +140,29 @@ def store_dataframe_chunks(chunks, filename, destination):
     for i, chunk in tqdm(enumerate(chunks), desc='Storing DataFrame chunks'):
         chunk.to_feather(f'{destination}/{filename}_{i}.feather', version=2, compression='zstd')
 
+def create_path_if_not_exist(directory):
+    """Creates directories if they do not exist."""
+    # get only the directory part of the path
+    directory = os.path.dirname(directory)
+    if not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)
 
 # Main script
 if __name__ == "__main__":
-    root_dir = '../../Scans'
-    destination = 'Data/Metadata_Only'
-    df = get_dicom_dataframe(root_dir, read_images=False)
+    # Get root/destination directories and read files flag from program arguments
+    if len(sys.argv) == 4:
+        root_dir = sys.argv[1]
+        destination = sys.argv[2]
+        read_images = sys.argv[3] == 'True'
+    else:
+        print("Usage: python DICOM_to_Dataframe.py <root_dir> <destination> <read_images ('True' or 'False')>")
+        sys.exit(1)
+
+    df = get_dicom_dataframe(root_dir, read_images=bool(read_images))
 
     # Create the output directory if it does not exist
-    if not os.path.exists(destination):
-        os.makedirs(destination, exist_ok=True)
+    create_path_if_not_exist(destination)
 
     print("Compressing the DataFrame...")
-    store_dataframe_chunks(split_dataframe(df), 'dicom_df', destination)
+    store_dataframe_chunks(split_dataframe(df, chunk_size=200), 'dicom_df', destination)
     print("DataFrame compressed successfully!")
