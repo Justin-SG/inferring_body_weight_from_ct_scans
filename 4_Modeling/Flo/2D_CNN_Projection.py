@@ -12,6 +12,8 @@ from CT_Dataset import CtScanDataset
 
 # define transforms for resnet18
 transforms = transforms.Compose([
+    # change the data type to uint32
+    transforms.Lambda(lambda x: x.astype(np.uint32)),
     # sum up all the pixel values over an axis and project them onto a 2D plane (Axial Projection)
     transforms.Lambda(lambda x: x.sum(axis=0)),
     # add color channel
@@ -27,11 +29,10 @@ transforms = transforms.Compose([
 ])
 
 
-dataset = CtScanDataset("inferring_body_weight_from_ct_scans/1_Data_Extraction/Data", transform=transforms)
+dataset = CtScanDataset("inferring_body_weight_from_ct_scans/1_Data_Extraction/Data", transform=None)
 print(len(dataset))
 print(dataset[0])
 
-# plot the first image
-import matplotlib.pyplot as plt
-plt.imshow(dataset[0][0], cmap='gray')
-plt.show()
+print(dataset[0][0])
+dataset[0][0].astype(np.uint32)
+print(dataset[0][0])

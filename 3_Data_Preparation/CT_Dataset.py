@@ -27,6 +27,9 @@ class CtScanDataset(Dataset):
         scan = self.dicom_df.iloc[idx]
         weight = scan['PatientWeight']
 
+        # weight to float
+        weight = np.float32(weight)
+
         pixel_array = np.load(self.data_path.joinpath(f'PixelArray/{scan["PixelArrayFile"]}'))
 
         if self.transform:
