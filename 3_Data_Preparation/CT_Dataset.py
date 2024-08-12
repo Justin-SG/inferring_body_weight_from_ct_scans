@@ -4,17 +4,23 @@ import numpy as np
 from torch.utils.data import Dataset
 from pathlib import Path
 
+
 class CtScanDataset(Dataset):
-    def __init__(self, dicom_df_path, transform=None):
+    def __init__(self, dicom_df_path, df_query=None, transform=None):
         """
-        :param dicom_df_path: Path to the dataframes containing the DICOM metadata
+        :param dicom_df_path: Path to the dataframes containing the cleaned DICOM metadata
+        :param df_query: query to apply to the DICOM metadata (eg. query only abdomen scans)
         :param transform: transformations to apply to the scan arrays
         """
         self.data_path = Path(dicom_df_path).resolve()
-        # Load the DICOM metadata frames and concatenate them
-        chunks = self.data_path.glob('dicom_df_*.feather')
-        dicom_dfs = [pd.read_feather(f) for f in chunks]
-        self.dicom_df = pd.concat(dicom_dfs)
+        # Load the DICOM metadata
+        self.dicom_df = pd.read_feather(self.data_path.joinpath('cleaned_dicom_df.feather'))
+
+        # Apply query if given
+        if df_query:
+            self.dicom_df = self.dicom_df.query(df_query)
+
+        # Apply transformations
         self.transform = transform
 
     def __len__(self):
@@ -27,7 +33,7 @@ class CtScanDataset(Dataset):
         scan = self.dicom_df.iloc[idx]
         weight = scan['PatientWeight']
 
-        # weight to float
+        # weight to float -> necessary for loss calculation
         weight = np.float32(weight)
 
         pixel_array = np.load(self.data_path.joinpath(f'PixelArray/{scan["PixelArrayFile"]}'))
@@ -36,3 +42,4 @@ class CtScanDataset(Dataset):
             pixel_array = self.transform(pixel_array)
 
         return pixel_array, weight
+

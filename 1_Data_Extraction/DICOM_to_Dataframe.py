@@ -127,19 +127,6 @@ def get_fields_for_dataset(dataset, prefix=''):
     return dataset_dict
 
 
-# from https://stackoverflow.com/questions/17315737/split-a-large-pandas-dataframe
-def split_dataframe(df, chunk_size=100):
-    chunks = list()
-    num_chunks = len(df) // chunk_size + 1
-    for i in range(num_chunks):
-        chunks.append(df[i * chunk_size:(i + 1) * chunk_size])
-    return chunks
-
-
-def store_dataframe_chunks(chunks, filename, destination):
-    for i, chunk in tqdm(enumerate(chunks), desc='Storing DataFrame chunks'):
-        chunk.to_feather(f'{destination}/{filename}_{i}.feather', version=2, compression='zstd')
-
 def create_path_if_not_exist(directory):
     """Creates directories if they do not exist."""
     # get only the directory part of the path
@@ -164,5 +151,5 @@ if __name__ == "__main__":
     create_path_if_not_exist(destination)
 
     print("Compressing the DataFrame...")
-    store_dataframe_chunks(split_dataframe(df, chunk_size=200), 'dicom_df', destination)
+    df.to_feather(f'{destination}/dicom_df.feather', version=2, compression='zstd')
     print("DataFrame compressed successfully!")
