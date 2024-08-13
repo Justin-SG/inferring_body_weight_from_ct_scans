@@ -6,15 +6,17 @@ from pathlib import Path
 
 
 class CtScanDataset(Dataset):
-    def __init__(self, dicom_df_path, df_query=None, transform=None):
+    def __init__(self, df_query=None, transform=None):
         """
         :param dicom_df_path: Path to the dataframes containing the cleaned DICOM metadata
         :param df_query: query to apply to the DICOM metadata (eg. query only abdomen scans)
         :param transform: transformations to apply to the scan arrays
         """
-        self.data_path = Path(dicom_df_path).resolve()
+        project_dir = Path(__file__).resolve().parent.parent
+
+        self.data_path = project_dir / 'Data'
         # Load the DICOM metadata
-        self.dicom_df = pd.read_feather(self.data_path.joinpath('cleaned_dicom_df.feather'))
+        self.dicom_df = pd.read_feather(self.data_path / 'cleaned_dicom_df.feather')
 
         # Apply query if given
         if df_query:

@@ -2,6 +2,7 @@ import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import argparse
 
 import numpy as np
 import pandas as pd
@@ -17,7 +18,7 @@ def get_dicomdir_paths(path):
     return list(Path(path).rglob('DICOMDIR'))
 
 
-def get_dicom_dataframe(path, read_images=True):
+def get_dicom_dataframe(path, read_images=False):
     """Create a DataFrame containing information from DICOMDIR files in the specified directory."""
     dicomdir_paths = get_dicomdir_paths(path)
     scans = []
@@ -34,7 +35,7 @@ def read_image(instance_path):
     return dcmread(instance_path)
 
 
-def extract_patient_data(patient, root_dir, dicomdir_filename, read_images=True):
+def extract_patient_data(patient, root_dir, dicomdir_filename, read_images=False):
     """Extract scan data from a patient record."""
     scans = []
     scan_base = {
@@ -54,7 +55,7 @@ def extract_patient_data(patient, root_dir, dicomdir_filename, read_images=True)
     return scans
 
 
-def extract_series_data(series, scan_base, root_dir, read_images=True):
+def extract_series_data(series, scan_base, root_dir, read_images=False):
     """Extract scan data from a series record."""
     scan = scan_base.copy()
 
@@ -74,8 +75,14 @@ def extract_series_data(series, scan_base, root_dir, read_images=True):
 
         pixel_array_3d = np.stack([instance.pixel_array for instance in instances])
         scan.update(get_fields_for_dataset(instances[0]))
+
+        # Save the pixel array to the PixelArray subfolder within the Data folder
+        project_dir = Path(__file__).resolve().parent.parent
+        pixel_array_dir = project_dir / 'Data' / 'PixelArray'
+        create_directory_if_not_exist(pixel_array_dir)
+
         scan['PixelArrayFile'] = f'Scan_{counter}.npy'
-        store_pixel_array_to_file(f'./Data/PixelArray/{scan["PixelArrayFile"]}', pixel_array_3d)
+        store_pixel_array_to_file(pixel_array_dir / scan['PixelArrayFile'], pixel_array_3d)
 
     else:
         scan.update(get_fields_for_dataset(read_image(instance_paths[0])))
@@ -87,13 +94,11 @@ def extract_series_data(series, scan_base, root_dir, read_images=True):
 
 def store_pixel_array_to_file(file_path, pixel_array):
     """Store the pixel array of a scan to a file."""
-    # create the directory if it does not exist
-    create_path_if_not_exist(file_path)
     file_path = Path(file_path)
-    np.save(file_path,
-            pixel_array)
+    np.save(file_path, pixel_array)
 
-def extract_scans_from_dicomdir(dicomdir, read_images=True):
+
+def extract_scans_from_dicomdir(dicomdir, read_images=False):
     """Extract CT scan information from a DICOMDIR object."""
     root_dir = Path(dicomdir.filename).resolve().parent
     scans = []
@@ -127,29 +132,30 @@ def get_fields_for_dataset(dataset, prefix=''):
     return dataset_dict
 
 
-def create_path_if_not_exist(directory):
+def create_directory_if_not_exist(path):
     """Creates directories if they do not exist."""
-    # get only the directory part of the path
-    directory = os.path.dirname(directory)
-    if not os.path.exists(directory):
-        os.makedirs(directory, exist_ok=True)
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
 
-# Main script
+
+def main():
+    # Argument parsing
+    parser = argparse.ArgumentParser(description="Extract and process DICOM data into a DataFrame.")
+    parser.add_argument('root_dir', type=str, help="The root directory containing DICOM files.")
+    parser.add_argument('-r', '--read_images', action='store_true', help="Flag to read and process images.")
+
+    args = parser.parse_args()
+
+    # Generate DataFrame from DICOM data
+    df = get_dicom_dataframe(args.root_dir, read_images=args.read_images)
+
+    # Save the DataFrame to the Data folder within the project directory
+    project_dir = Path(__file__).resolve().parent.parent
+    data_dir = project_dir / 'Data'
+    create_directory_if_not_exist(data_dir)
+    df.to_feather(data_dir / 'dicom_df.feather', version=2, compression='zstd')
+    print(f"DataFrame saved to '{data_dir / 'dicom_df.feather'}' successfully!")
+
+
 if __name__ == "__main__":
-    # Get root/destination directories and read files flag from program arguments
-    if len(sys.argv) == 4:
-        root_dir = sys.argv[1]
-        destination = sys.argv[2]
-        read_images = sys.argv[3] == 'True'
-    else:
-        print("Usage: python DICOM_to_Dataframe.py <root_dir> <destination> <read_images ('True' or 'False')>")
-        sys.exit(1)
-
-    df = get_dicom_dataframe(root_dir, read_images=bool(read_images))
-
-    # Create the output directory if it does not exist
-    create_path_if_not_exist(destination)
-
-    print("Compressing the DataFrame...")
-    df.to_feather(f'{destination}/dicom_df.feather', version=2, compression='zstd')
-    print("DataFrame compressed successfully!")
+    main()
