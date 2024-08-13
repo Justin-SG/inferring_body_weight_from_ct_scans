@@ -3,3 +3,6 @@
 
 # Ignore all .feather files
 *.feather
+
+# Ignore all pixel array files
+*.npy

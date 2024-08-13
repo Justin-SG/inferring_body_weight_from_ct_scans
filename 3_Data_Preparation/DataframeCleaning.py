@@ -19,9 +19,7 @@ if __name__ == '__main__':
 
     # Load the DICOM metadata frames and concatenate them
     dicom_df_path = Path(args.data_path).resolve()
-    chunks = dicom_df_path.glob('dicom_df_*.feather')
-    dicom_dfs = [pd.read_feather(f) for f in chunks]
-    dicom_df = pd.concat(dicom_dfs)
+    dicom_df = pd.read_feather(f'{dicom_df_path}/dicom_df.feather')
 
     # Cleaning
     data_cleaning(dicom_df)
