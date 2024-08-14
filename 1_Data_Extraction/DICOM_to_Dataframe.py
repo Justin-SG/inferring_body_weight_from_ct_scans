@@ -3,6 +3,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import argparse
+import logging
 
 import numpy as np
 import pandas as pd
@@ -12,20 +13,34 @@ from tqdm import tqdm
 from util.NativeTypeConverter import convert_to_native_type
 from util.Counter import Counter
 
+# Configure the logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
 
 def get_dicomdir_paths(path):
     """Retrieve all DICOMDIR paths from the specified directory."""
-    return list(Path(path).rglob('DICOMDIR'))
+    logger.info(f"Searching for DICOMDIR paths in '{path}'")
+    paths = list(Path(path).rglob('DICOMDIR'))
+    logger.info(f"Found {len(paths)} DICOMDIR paths")
+    return paths
 
 
 def get_dicom_dataframe(path, read_images=False):
     """Create a DataFrame containing information from DICOMDIR files in the specified directory."""
+    logger.info(f"Creating DataFrame from DICOMDIR files in '{path}'")
     dicomdir_paths = get_dicomdir_paths(path)
     scans = []
 
     for dicomdir_path in dicomdir_paths:
+        logger.info(f"Extracting scans from '{dicomdir_path}'...")
         dicomdir = dcmread(dicomdir_path)
-        scans.extend(extract_scans_from_dicomdir(dicomdir, read_images))
+        extracted_scans = extract_scans_from_dicomdir(dicomdir, read_images)
+        logger.info(f"Extracted {len(extracted_scans)} scans")
+        scans.extend(extracted_scans)
 
     return pd.DataFrame(scans)
 
@@ -147,6 +162,7 @@ def main():
     args = parser.parse_args()
 
     # Generate DataFrame from DICOM data
+    logger.info("Starting DICOM data extraction process")
     df = get_dicom_dataframe(args.root_dir, read_images=args.read_images)
 
     # Save the DataFrame to the Data folder within the project directory
@@ -154,8 +170,9 @@ def main():
     data_dir = project_dir / 'Data'
     create_directory_if_not_exist(data_dir)
     df.to_feather(data_dir / 'dicom_df.feather', version=2, compression='zstd')
-    print(f"DataFrame saved to '{data_dir / 'dicom_df.feather'}' successfully!")
+    logger.info(f"DataFrame saved to '{data_dir / 'dicom_df.feather'}' successfully!")
 
 
 if __name__ == "__main__":
+
     main()
