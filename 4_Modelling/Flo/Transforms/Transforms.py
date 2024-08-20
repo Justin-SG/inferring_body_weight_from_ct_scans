@@ -3,7 +3,7 @@ from .CustomTransforms import *
 from torchvision.transforms import v2
 
 
-def axial_projection_resnet_transforms():
+def axial_projection_imagenet_transforms():
     return v2.Compose([
         # change the data type to uint32 -> prevents overflow
         v2.Lambda(lambda x: x.astype(np.float32)),
@@ -24,7 +24,7 @@ def axial_projection_resnet_transforms():
     ])
 
 
-def coronal_projection_resnet_transforms():
+def coronal_projection_imagenet_transforms():
     return v2.Compose([
         # change the data type to uint32 -> prevents overflow
         v2.Lambda(lambda x: x.astype(np.float32)),
@@ -45,7 +45,7 @@ def coronal_projection_resnet_transforms():
     ])
 
 
-def sagittal_projection_resnet_transforms():
+def sagittal_projection_imagenet_transforms():
     return v2.Compose([
         # change the data type to uint32 -> prevents overflow
         v2.Lambda(lambda x: x.astype(np.float32)),
