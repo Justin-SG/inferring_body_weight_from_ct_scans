@@ -70,9 +70,7 @@ class CtScanDatasetExtended(Dataset):
 
         # Apply transformations
         self.transform = pixel_array_transform
-
-        if additional_features_transform:
-            self.additional_features_transforms = additional_features_transform
+        self.additional_features_transforms = additional_features_transform
 
     def __len__(self):
         """Get the number of scans in the dataset."""
@@ -103,9 +101,10 @@ class CtScanDatasetExtended(Dataset):
             for feature in self.additional_features:
                 # If the feature is a list or array, add each element as a separate feature
                 if isinstance(scan[feature], (list, np.ndarray)):
-                    additional_inputs.extend(scan[feature])
+                    for item in scan[feature]:
+                        additional_inputs.append(np.float32(item))
                 else:
-                    additional_inputs.append(scan[feature])
+                    additional_inputs.append(np.float32(scan[feature]))
 
 
         # Add ImageNet scaling factor if required
@@ -113,6 +112,12 @@ class CtScanDatasetExtended(Dataset):
             # calculate depth scaling factor
             slice_count = scan['SliceCount']
             scaling_factor = slice_count / 224 # ImageNet input size
-            additional_inputs.append(scaling_factor)
+            additional_inputs.append(np.float32(scaling_factor))
+
+        if self.additional_features_transforms:
+            additional_inputs = self.additional_features_transforms(additional_inputs)
+
+        # Convert to tensor if not already
+        additional_inputs = torch.tensor(additional_inputs, dtype=torch.float32)
 
         return pixel_array, additional_inputs, weight

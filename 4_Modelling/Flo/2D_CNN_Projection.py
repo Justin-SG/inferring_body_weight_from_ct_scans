@@ -9,11 +9,14 @@ from torch.utils.data import DataLoader, random_split
 from torchvision import models
 from torchvision.models import ResNet18_Weights, ResNet50_Weights, ResNet152_Weights, ViT_B_16_Weights, ViT_B_32_Weights
 from pathlib import Path
+import argparse
+import os
 
 # Adding Project Paths
 project_dir = Path(__file__).resolve().parent.parent.parent
 data_dir = project_dir / 'Data'
 model_dir = project_dir / 'Model' / 'Flo'
+eval_dir = project_dir / '5_Evaluation' / 'Flo'
 
 sys.path.append(str(project_dir / '3_Data_Preparation'))
 
@@ -28,30 +31,40 @@ def create_directory_if_not_exist(path):
     path.mkdir(parents=True, exist_ok=True)
 
 
-def get_model(model_name, pretrained=True):
+def get_model(model_name, pretrained=True, with_regression_layer=False):
     """Load a pretrained model."""
-    if model_name == "resnet18":
-        model = models.resnet18(weights=ResNet18_Weights.DEFAULT if pretrained else None)
-    elif model_name == "resnet50":
-        model = models.resnet50(weights=ResNet50_Weights.DEFAULT if pretrained else None)
-    elif model_name == "resnet152":
-        model = models.resnet152(weights=ResNet152_Weights.DEFAULT if pretrained else None)
-    elif model_name == "vit_b_16":
-        model = models.vit_b_16(weights=ViT_B_16_Weights.DEFAULT if pretrained else None)
-    elif model_name == "vit_b_32":
-        model = models.vit_b_32(weights=ViT_B_32_Weights.DEFAULT if pretrained else None)
-    else:
-        raise ValueError("Model name not recognized.")
+    model_mapping = {
+        "resnet18": models.resnet18(weights=ResNet18_Weights.DEFAULT if pretrained else None),
+        "resnet50": models.resnet50(weights=ResNet50_Weights.DEFAULT if pretrained else None),
+        "resnet152": models.resnet152(weights=ResNet152_Weights.DEFAULT if pretrained else None),
+        "vit_b_16": models.vit_b_16(weights=ViT_B_16_Weights.DEFAULT if pretrained else None),
+        "vit_b_32": models.vit_b_32(weights=ViT_B_32_Weights.DEFAULT if pretrained else None)
+    }
+
+    if model_name not in model_mapping:
+        raise ValueError(f"Model name '{model_name}' not recognized.")
+
+    model = model_mapping[model_name]
+
+    if with_regression_layer:
+        if 'vit' in model_name:
+            model.heads.head = nn.Linear(model.heads.head.in_features, 1)
+        else:
+            model.fc = nn.Linear(model.fc.in_features, 1)
+
     return model
 
 
-def train_and_validate(model, train_loader, val_loader, num_epochs=25, extended=False):
-    """Train and validate the model over a number of epochs."""
+def train_and_validate(model, train_loader, val_loader, num_epochs=25, with_additional_params=False, patience=5):
+    """Train and validate the model over a number of epochs with early stopping."""
     criterion = nn.L1Loss()  # Mean Absolute Error
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     train_losses = []
     val_losses = []
+    best_val_loss = float('inf')
+    epochs_no_improve = 0
+    trained_epochs = 0
 
     for epoch in range(num_epochs):
         model.train()
@@ -59,7 +72,7 @@ def train_and_validate(model, train_loader, val_loader, num_epochs=25, extended=
 
         for data in train_loader:
             optimizer.zero_grad()
-            if extended:
+            if with_additional_params:
                 inputs, additional_params, targets = data
                 outputs = model(inputs, additional_params)
             else:
@@ -79,7 +92,7 @@ def train_and_validate(model, train_loader, val_loader, num_epochs=25, extended=
 
         with torch.no_grad():
             for data in val_loader:
-                if extended:
+                if with_additional_params:
                     inputs, additional_params, targets = data
                     outputs = model(inputs, additional_params)
                 else:
@@ -94,11 +107,23 @@ def train_and_validate(model, train_loader, val_loader, num_epochs=25, extended=
 
         print(f'Epoch {epoch + 1}/{num_epochs}, Train Loss: {epoch_train_loss:.4f}, Val Loss: {epoch_val_loss:.4f}')
 
-    return train_losses, val_losses
+        # Check for early stopping
+        if epoch_val_loss < best_val_loss:
+            best_val_loss = epoch_val_loss
+            epochs_no_improve = 0
+        else:
+            epochs_no_improve += 1
+            if epochs_no_improve >= patience:
+                print("Early stopping triggered.")
+                trained_epochs = epoch + 1  # Capture the number of epochs trained
+                break
+        trained_epochs = epoch + 1
+
+    return train_losses, val_losses, trained_epochs
 
 
-def plot_loss_curves(train_losses, val_losses, model_name, dataset_name):
-    """Plot the loss curves for training and validation."""
+def plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name, eval_dir):
+    """Plot and save the loss curves for training and validation."""
     plt.figure(figsize=(10, 6))
     plt.plot(train_losses, label='Train Loss')
     plt.plot(val_losses, label='Validation Loss')
@@ -106,12 +131,91 @@ def plot_loss_curves(train_losses, val_losses, model_name, dataset_name):
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
+
+    # Save the plot to the evaluation directory
+    plot_path = eval_dir / f'{model_name}_{dataset_name}_loss_curves.png'
+    plt.savefig(plot_path)
+    print(f"Saved loss curves to {plot_path}")
+
     plt.show()
 
 
-if __name__ == '__main__':
-    # Create model folder
+def model_exists(model_name, dataset_name, extended=False):
+    """Check if the model already exists in the model directory."""
+    model_suffix = "_scaling" if extended else ""
+    model_path = model_dir / f'{model_name}{model_suffix}_{dataset_name}.pth'
+    return model_path.exists(), model_path
+
+
+def save_model_stats(stats, eval_dir):
+    """Save model statistics to a CSV file."""
+    stats_df = pd.DataFrame(stats)
+    stats_file = eval_dir / 'model_statistics.csv'
+
+    if stats_file.exists():
+        existing_stats = pd.read_csv(stats_file)
+        stats_df = pd.concat([existing_stats, stats_df], ignore_index=True)
+
+    stats_df.to_csv(stats_file, index=False)
+
+
+def train_model_on_dataset(model_name, dataset_name, dataset, num_epochs, patience, with_scaling_factor=False, additional_params=None):
+    """Train a model on a specific dataset, with optional additional parameters."""
+    train_dataset, val_dataset = random_split(
+        dataset,
+        [int(0.8 * len(dataset)), len(dataset) - int(0.8 * len(dataset))],
+        generator=torch.Generator().manual_seed(42)
+    )
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+
+    model_already_exists, model_path = model_exists(model_name, dataset_name, extended=with_scaling_factor)
+
+    if model_already_exists and not args.overwrite:
+        print(f'Skipping {model_name} on {dataset_name} dataset (model already exists).')
+        return None
+
+    if with_scaling_factor and additional_params:
+        num_additional_params = len(additional_params)
+        model = CTWeightRegressor2D(
+            get_model(model_name, pretrained=True),
+            num_additional_params=num_additional_params,
+            fc_layers=[128, 64, 32]
+        )
+    else:
+        model = get_model(model_name, pretrained=True, with_regression_layer=True)
+
+    print(f'Training {model_name} on {dataset_name} dataset...')
+    train_losses, val_losses, trained_epochs = train_and_validate(
+        model, train_loader, val_loader,
+        num_epochs=num_epochs, patience=patience,
+        with_additional_params=with_scaling_factor
+    )
+
+    plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name, eval_dir)
+    torch.save(model.state_dict(), model_path)
+    print(f'Saved {model_name} on {dataset_name} dataset to {model_path}')
+
+    return {
+        "model_name": model_name,
+        "dataset_name": dataset_name,
+        "with_scaling_factor": with_scaling_factor,
+        "train_loss": train_losses[-1],
+        "val_loss": val_losses[-1],
+        "epochs_trained": trained_epochs,
+        "additional_params": additional_params,
+        "multiplicative_neurons": False  # Placeholder for future use
+    }
+
+
+def main(args):
+    # Create necessary directories
     create_directory_if_not_exist(model_dir)
+    create_directory_if_not_exist(eval_dir)
+
+    # Use the GPU if available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
 
     # Define the datasets
     query = 'BodyPart == "Stamm"'
@@ -130,60 +234,47 @@ if __name__ == '__main__':
                                                   imagenet_scaling_factor=True)
     }
 
-    # Define the models
-    models_dict = {
-        "resnet18": get_model("resnet18"),
-        "resnet50": get_model("resnet50"),
-        "resnet152": get_model("resnet152"),
-        "vit_b_16": get_model("vit_b_16"),
-        "vit_b_32": get_model("vit_b_32")
-    }
+    backbones = [
+        "resnet18",
+        "resnet50",
+        "resnet152",
+        "vit_b_16",
+        "vit_b_32"
+    ]
+
+    model_statistics = []
 
     # Train and validate each model on each dataset (original)
     for dataset_name, dataset in datasets.items():
-        # Split dataset into training and validation sets
-        train_dataset, val_dataset = random_split(dataset,
-                                                  [int(0.8 * len(dataset)), len(dataset) - int(0.8 * len(dataset))],
-                                                  generator=torch.Generator().manual_seed(42))
-        train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
-
-        for model_name, model in models_dict.items():
-            print(f'Training {model_name} on {dataset_name} dataset...')
-            train_losses, val_losses = train_and_validate(model, train_loader, val_loader, num_epochs=10)
-
-            # Plot the loss curves
-            plot_loss_curves(train_losses, val_losses, model_name, dataset_name)
-
-            # Save the model
-            model_save_path = model_dir / f'{model_name}_{dataset_name}.pth'
-            torch.save(model.state_dict(), model_save_path)
-            print(f'Saved {model_name} on {dataset_name} dataset to {model_save_path}')
+        for model_name in backbones:
+            stats = train_model_on_dataset(
+                model_name, dataset_name, dataset,
+                num_epochs=args.epochs, patience=args.patience
+            )
+            if stats:
+                model_statistics.append(stats)
 
     # Train and validate each custom model on each extended dataset
     for dataset_name, dataset in datasets_extended.items():
-        # Split dataset into training and validation sets
-        train_dataset, val_dataset = random_split(dataset,
-                                                  [int(0.8 * len(dataset)), len(dataset) - int(0.8 * len(dataset))],
-                                                  generator=torch.Generator().manual_seed(42))
-        train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+        additional_params = ['imagenet_scaling_factor']  # Example additional parameter
 
-        for model_name, backend_model in models_dict.items():
-            print(f'Training {model_name} with custom model on {dataset_name} dataset...')
+        for model_name in backbones:
+            stats = train_model_on_dataset(
+                model_name, dataset_name, dataset,
+                num_epochs=args.epochs, patience=args.patience,
+                with_scaling_factor=True, additional_params=additional_params
+            )
+            if stats:
+                model_statistics.append(stats)
 
-            # Initialize the custom model
-            num_additional_params = 1  # In this case, only imagenet_scaling_factor is used
-            model = CTWeightRegressor(backend_model, num_additional_params=num_additional_params,
-                                      fc_layers=[512, 256, 128])
+    save_model_stats(model_statistics, eval_dir)
 
-            # Train and validate the custom model
-            train_losses, val_losses = train_and_validate(model, train_loader, val_loader, num_epochs=10, extended=True)
 
-            # Plot the loss curves
-            plot_loss_curves(train_losses, val_losses, model_name, dataset_name)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Train and validate CT scan models.")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing models.")
+    parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for training.")
+    parser.add_argument("--patience", type=int, default=5, help="Patience for early stopping.")
+    args = parser.parse_args()
 
-            # Save the model
-            model_save_path = model_dir / f'{model_name}_scaling_{dataset_name}.pth'
-            torch.save(model.state_dict(), model_save_path)
-            print(f'Saved {model_name} with scaling on {dataset_name} dataset to {model_save_path}')
+    main(args)
