@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 
 
-class CTWeightRegressor2D(nn.Module):
+class CtWeightRegressorAdditionalParams2D(nn.Module):
     def __init__(self, backend_model, num_additional_params=0, fc_layers=[128, 64, 32]):
-        super(CTWeightRegressor2D, self).__init__()
+        super(CtWeightRegressorAdditionalParams2D, self).__init__()
 
         # Assume the backend model is already instantiated and passed as an argument
         self.backend = backend_model
@@ -49,9 +49,9 @@ class CTWeightRegressor2D(nn.Module):
 
 
 
-class ScaledOutputRegressor(nn.Module):
+class CtMultipliedScaleWeightRegressor2D(nn.Module):
     def __init__(self, backend_model, fc_layers=[128, 64, 32]):
-        super(ScaledOutputRegressor, self).__init__()
+        super(CtMultipliedScaleWeightRegressor2D, self).__init__()
 
         # Assume the backend model is already instantiated and passed as an argument
         self.backend = backend_model

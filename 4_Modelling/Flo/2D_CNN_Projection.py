@@ -1,6 +1,5 @@
 import sys
 import pandas as pd
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -10,19 +9,19 @@ from torchvision import models
 from torchvision.models import ResNet18_Weights, ResNet50_Weights, ResNet152_Weights, ViT_B_16_Weights, ViT_B_32_Weights
 from pathlib import Path
 import argparse
-import os
 
 # Adding Project Paths
 project_dir = Path(__file__).resolve().parent.parent.parent
 data_dir = project_dir / 'Data'
 model_dir = project_dir / 'Model' / 'Flo'
 eval_dir = project_dir / '5_Evaluation' / 'Flo'
+loss_curves_dir = project_dir / '5_Evaluation' / 'Flo' / 'Loss_Curves'
 
 sys.path.append(str(project_dir / '3_Data_Preparation'))
 
 from CT_Datasets import CtScanDataset, CtScanDatasetExtended
 from Transforms import Transforms
-from CustomModels import CTWeightRegressor2D
+from CustomModels import CtWeightRegressorAdditionalParams2D, CtMultipliedScaleWeightRegressor2D
 
 
 def create_directory_if_not_exist(path):
@@ -55,7 +54,7 @@ def get_model(model_name, pretrained=True, with_regression_layer=False):
     return model
 
 
-def train_and_validate(model, train_loader, val_loader, num_epochs=25, with_additional_params=False, patience=5):
+def train_and_validate(model, train_loader, val_loader, num_epochs=25, patience=5, with_additional_params=False, multiplied_scaling_factor=False):
     """Train and validate the model over a number of epochs with early stopping."""
     criterion = nn.L1Loss()  # Mean Absolute Error
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -72,7 +71,7 @@ def train_and_validate(model, train_loader, val_loader, num_epochs=25, with_addi
 
         for data in train_loader:
             optimizer.zero_grad()
-            if with_additional_params:
+            if with_additional_params or multiplied_scaling_factor:
                 inputs, additional_params, targets = data
                 outputs = model(inputs, additional_params)
             else:
@@ -92,7 +91,7 @@ def train_and_validate(model, train_loader, val_loader, num_epochs=25, with_addi
 
         with torch.no_grad():
             for data in val_loader:
-                if with_additional_params:
+                if with_additional_params or multiplied_scaling_factor:
                     inputs, additional_params, targets = data
                     outputs = model(inputs, additional_params)
                 else:
@@ -122,7 +121,7 @@ def train_and_validate(model, train_loader, val_loader, num_epochs=25, with_addi
     return train_losses, val_losses, trained_epochs
 
 
-def plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name, eval_dir):
+def plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name, loss_curves_dir):
     """Plot and save the loss curves for training and validation."""
     plt.figure(figsize=(10, 6))
     plt.plot(train_losses, label='Train Loss')
@@ -133,16 +132,20 @@ def plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name
     plt.legend()
 
     # Save the plot to the evaluation directory
-    plot_path = eval_dir / f'{model_name}_{dataset_name}_loss_curves.png'
+    plot_path = loss_curves_dir / f'{model_name}_{dataset_name}_loss_curve.png'
     plt.savefig(plot_path)
     print(f"Saved loss curves to {plot_path}")
 
     plt.show()
 
 
-def model_exists(model_name, dataset_name, extended=False):
+def model_exists(model_name, dataset_name, additional_params=None, multiplied_scaling_factor=False):
     """Check if the model already exists in the model directory."""
-    model_suffix = "_scaling" if extended else ""
+    model_suffix = "_scale_multiplied" if multiplied_scaling_factor else ""
+    if additional_params:
+        for param in additional_params:
+            model_suffix += f"_{param}"
+
     model_path = model_dir / f'{model_name}{model_suffix}_{dataset_name}.pth'
     return model_path.exists(), model_path
 
@@ -159,7 +162,14 @@ def save_model_stats(stats, eval_dir):
     stats_df.to_csv(stats_file, index=False)
 
 
-def train_model_on_dataset(model_name, dataset_name, dataset, num_epochs, patience, with_scaling_factor=False, additional_params=None):
+def train_model_on_dataset(model_name,
+                           dataset_name,
+                           dataset,
+                           num_epochs,
+                           patience,
+                           with_scaling_factor=False,
+                           multiplied_scaling_factor=False,
+                           additional_params=None):
     """Train a model on a specific dataset, with optional additional parameters."""
     train_dataset, val_dataset = random_split(
         dataset,
@@ -169,15 +179,23 @@ def train_model_on_dataset(model_name, dataset_name, dataset, num_epochs, patien
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
 
-    model_already_exists, model_path = model_exists(model_name, dataset_name, extended=with_scaling_factor)
+    model_already_exists, model_path = model_exists(model_name,
+                                                    dataset_name,
+                                                    multiplied_scaling_factor=multiplied_scaling_factor,
+                                                    additional_params=additional_params)
 
     if model_already_exists and not args.overwrite:
         print(f'Skipping {model_name} on {dataset_name} dataset (model already exists).')
         return None
 
-    if with_scaling_factor and additional_params:
+    if with_scaling_factor and multiplied_scaling_factor:
+        model = CtMultipliedScaleWeightRegressor2D(
+            get_model(model_name, pretrained=True),
+            fc_layers=[128, 64, 32]
+        )
+    elif additional_params:
         num_additional_params = len(additional_params)
-        model = CTWeightRegressor2D(
+        model = CtWeightRegressorAdditionalParams2D(
             get_model(model_name, pretrained=True),
             num_additional_params=num_additional_params,
             fc_layers=[128, 64, 32]
@@ -185,26 +203,31 @@ def train_model_on_dataset(model_name, dataset_name, dataset, num_epochs, patien
     else:
         model = get_model(model_name, pretrained=True, with_regression_layer=True)
 
-    print(f'Training {model_name} on {dataset_name} dataset...')
+    if with_scaling_factor:
+        print(f'Training {model_name} on {dataset_name} dataset (Scale multiplied: {multiplied_scaling_factor})...')
+    else:
+        print(f'Training {model_name} on {dataset_name} dataset...')
+
     train_losses, val_losses, trained_epochs = train_and_validate(
         model, train_loader, val_loader,
         num_epochs=num_epochs, patience=patience,
-        with_additional_params=with_scaling_factor
+        with_additional_params = True if additional_params else False,
+        multiplied_scaling_factor = multiplied_scaling_factor
     )
 
-    plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name, eval_dir)
+    plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name, loss_curves_dir)
     torch.save(model.state_dict(), model_path)
     print(f'Saved {model_name} on {dataset_name} dataset to {model_path}')
 
     return {
         "model_name": model_name,
         "dataset_name": dataset_name,
-        "with_scaling_factor": with_scaling_factor,
         "train_loss": train_losses[-1],
         "val_loss": val_losses[-1],
         "epochs_trained": trained_epochs,
+        "with_scaling_factor": with_scaling_factor,
+        "multiplied_scaling_factor": multiplied_scaling_factor,
         "additional_params": additional_params,
-        "multiplicative_neurons": False  # Placeholder for future use
     }
 
 
@@ -212,6 +235,7 @@ def main(args):
     # Create necessary directories
     create_directory_if_not_exist(model_dir)
     create_directory_if_not_exist(eval_dir)
+    create_directory_if_not_exist(loss_curves_dir)
 
     # Use the GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -225,7 +249,7 @@ def main(args):
         "sagittal": CtScanDataset(df_query=query, transform=Transforms.sagittal_projection_imagenet_transforms())
     }
 
-    datasets_extended = {
+    datasets_scaling_factor = {
         "coronal_scaling": CtScanDatasetExtended(df_query=query,
                                                  pixel_array_transform=Transforms.coronal_projection_imagenet_transforms(),
                                                  imagenet_scaling_factor=True),
@@ -234,19 +258,34 @@ def main(args):
                                                   imagenet_scaling_factor=True)
     }
 
-    backbones = [
+    datasets_scaling_thickness_spacing = {
+        "axial_spacing_thickness_scaling": CtScanDatasetExtended(df_query=query,
+                                                  pixel_array_transform=Transforms.axial_projection_imagenet_transforms(),
+                                                  additional_features=['PixelSpacing', 'SliceThickness'],
+                                                  imagenet_scaling_factor=True),
+        "coronal_spacing_thickness_scaling": CtScanDatasetExtended(df_query=query,
+                                                 pixel_array_transform=Transforms.coronal_projection_imagenet_transforms(),
+                                                 additional_features=['PixelSpacing', 'SliceThickness'],
+                                                 imagenet_scaling_factor=True),
+        "sagittal_spacing_thickness_scaling": CtScanDatasetExtended(df_query=query,
+                                                  pixel_array_transform=Transforms.sagittal_projection_imagenet_transforms(),
+                                                  additional_features=['PixelSpacing', 'SliceThickness'],
+                                                  imagenet_scaling_factor=True)
+    }
+
+    backends = [
         "resnet18",
-        "resnet50",
-        "resnet152",
-        "vit_b_16",
-        "vit_b_32"
+        #"resnet50",
+        #"resnet152",
+        #"vit_b_16",
+        #"vit_b_32"
     ]
 
     model_statistics = []
 
-    # Train and validate each model on each dataset (original)
+    # Train and validate each model on each dataset (no additional features)
     for dataset_name, dataset in datasets.items():
-        for model_name in backbones:
+        for model_name in backends:
             stats = train_model_on_dataset(
                 model_name, dataset_name, dataset,
                 num_epochs=args.epochs, patience=args.patience
@@ -254,11 +293,40 @@ def main(args):
             if stats:
                 model_statistics.append(stats)
 
-    # Train and validate each custom model on each extended dataset
-    for dataset_name, dataset in datasets_extended.items():
-        additional_params = ['imagenet_scaling_factor']  # Example additional parameter
+    # Train and validate each scaled model on each dataset (with scaling factor)
+    for dataset_name, dataset in datasets_scaling_factor.items():
+        additional_params = ['scaling_factor']  # Example additional parameter
 
-        for model_name in backbones:
+        for model_name in backends:
+            stats = train_model_on_dataset(
+                model_name, dataset_name, dataset,
+                num_epochs=args.epochs, patience=args.patience,
+                with_scaling_factor=True, additional_params=additional_params
+            )
+            if stats:
+                model_statistics.append(stats)
+    
+    
+    # Train and validate each model with multiplied scaling factor on each dataset
+    for dataset_name, dataset in datasets_scaling_factor.items():
+        additional_params = ['scaling_factor']  # Example additional parameter
+        
+        for model_name in backends:
+            stats = train_model_on_dataset(
+                model_name, dataset_name, dataset,
+                num_epochs=args.epochs, patience=args.patience,
+                with_scaling_factor=True,
+                multiplied_scaling_factor=True,
+                additional_params=additional_params
+            )
+            if stats:
+                model_statistics.append(stats)
+
+    # Train and validate each model with additional features on each dataset
+    for dataset_name, dataset in datasets_scaling_thickness_spacing.items():
+        additional_params = ['scaling_factor', 'pixel_spacing', 'slice_thickness']
+
+        for model_name in backends:
             stats = train_model_on_dataset(
                 model_name, dataset_name, dataset,
                 num_epochs=args.epochs, patience=args.patience,
