@@ -9,6 +9,12 @@ from torchvision import models
 from torchvision.models import ResNet18_Weights, ResNet50_Weights, ResNet152_Weights, ViT_B_16_Weights, ViT_B_32_Weights
 from pathlib import Path
 import argparse
+import time
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Adding Project Paths
 project_dir = Path(__file__).resolve().parent.parent.parent
@@ -54,16 +60,30 @@ def get_model(model_name, pretrained=True, with_regression_layer=False):
     return model
 
 
-def train_and_validate(model, train_loader, val_loader, num_epochs=25, patience=5, with_additional_params=False, multiplied_scaling_factor=False):
+def train_and_validate(model,
+                       train_loader,
+                       val_loader,
+                       device,
+                       num_epochs=25,
+                       patience=5,
+                       learning_rate=0.001,
+                       with_additional_params=False,
+                       multiplied_scaling_factor=False):
     """Train and validate the model over a number of epochs with early stopping."""
     criterion = nn.L1Loss()  # Mean Absolute Error
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
     epochs_no_improve = 0
     trained_epochs = 0
+
+    # Move model to the device (GPU or CPU)
+    model = model.to(device)
+
+    # Record the start time of training
+    start_time = time.time()
 
     for epoch in range(num_epochs):
         model.train()
@@ -73,9 +93,11 @@ def train_and_validate(model, train_loader, val_loader, num_epochs=25, patience=
             optimizer.zero_grad()
             if with_additional_params or multiplied_scaling_factor:
                 inputs, additional_params, targets = data
+                inputs, additional_params, targets = inputs.to(device), additional_params.to(device), targets.to(device)
                 outputs = model(inputs, additional_params)
             else:
                 inputs, targets = data
+                inputs, targets = inputs.to(device), targets.to(device)
                 outputs = model(inputs)
 
             loss = criterion(outputs, targets.unsqueeze(1))
@@ -88,23 +110,29 @@ def train_and_validate(model, train_loader, val_loader, num_epochs=25, patience=
 
         model.eval()
         running_val_loss = 0.0
+        max_absolute_error = 0.0
 
         with torch.no_grad():
             for data in val_loader:
                 if with_additional_params or multiplied_scaling_factor:
                     inputs, additional_params, targets = data
+                    inputs, additional_params, targets = inputs.to(device), additional_params.to(device), targets.to(device)
                     outputs = model(inputs, additional_params)
                 else:
                     inputs, targets = data
+                    inputs, targets = inputs.to(device), targets.to(device)
                     outputs = model(inputs)
 
                 loss = criterion(outputs, targets.unsqueeze(1))
                 running_val_loss += loss.item() * inputs.size(0)
 
+                # Calculate max absolute error
+                max_absolute_error = max(max_absolute_error, torch.max(torch.abs(outputs - targets.unsqueeze(1))).item())
+
         epoch_val_loss = running_val_loss / len(val_loader.dataset)
         val_losses.append(epoch_val_loss)
 
-        print(f'Epoch {epoch + 1}/{num_epochs}, Train Loss: {epoch_train_loss:.4f}, Val Loss: {epoch_val_loss:.4f}')
+        logger.info(f'Epoch {epoch + 1}/{num_epochs}, Train Loss: {epoch_train_loss:.4f}, Val Loss: {epoch_val_loss:.4f}, Max Abs Error: {max_absolute_error:.4f}')
 
         # Check for early stopping
         if epoch_val_loss < best_val_loss:
@@ -113,12 +141,15 @@ def train_and_validate(model, train_loader, val_loader, num_epochs=25, patience=
         else:
             epochs_no_improve += 1
             if epochs_no_improve >= patience:
-                print("Early stopping triggered.")
+                logger.info("Early stopping triggered.")
                 trained_epochs = epoch + 1  # Capture the number of epochs trained
                 break
         trained_epochs = epoch + 1
 
-    return train_losses, val_losses, trained_epochs
+    # Record the total training time
+    training_time = time.time() - start_time
+
+    return train_losses, val_losses, trained_epochs, max_absolute_error, training_time
 
 
 def plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name, loss_curves_dir):
@@ -134,9 +165,7 @@ def plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name
     # Save the plot to the evaluation directory
     plot_path = loss_curves_dir / f'{model_name}_{dataset_name}_loss_curve.png'
     plt.savefig(plot_path)
-    print(f"Saved loss curves to {plot_path}")
-
-    plt.show()
+    logger.info(f"Saved loss curves to {plot_path}")
 
 
 def model_exists(model_name, dataset_name, additional_params=None, multiplied_scaling_factor=False):
@@ -165,8 +194,12 @@ def save_model_stats(stats, eval_dir):
 def train_model_on_dataset(model_name,
                            dataset_name,
                            dataset,
+                           query,
                            num_epochs,
                            patience,
+                           device,
+                           batch_size=32,
+                           learning_rate=0.001,
                            with_scaling_factor=False,
                            multiplied_scaling_factor=False,
                            additional_params=None):
@@ -176,8 +209,8 @@ def train_model_on_dataset(model_name,
         [int(0.8 * len(dataset)), len(dataset) - int(0.8 * len(dataset))],
         generator=torch.Generator().manual_seed(42)
     )
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     model_already_exists, model_path = model_exists(model_name,
                                                     dataset_name,
@@ -185,7 +218,7 @@ def train_model_on_dataset(model_name,
                                                     additional_params=additional_params)
 
     if model_already_exists and not args.overwrite:
-        print(f'Skipping {model_name} on {dataset_name} dataset (model already exists).')
+        logger.info(f'Skipping {model_name} on {dataset_name} dataset (model already exists).')
         return None
 
     if with_scaling_factor and multiplied_scaling_factor:
@@ -204,31 +237,45 @@ def train_model_on_dataset(model_name,
         model = get_model(model_name, pretrained=True, with_regression_layer=True)
 
     if with_scaling_factor:
-        print(f'Training {model_name} on {dataset_name} dataset (Scale multiplied: {multiplied_scaling_factor})...')
+        logger.info(f'Training {model_name} on {dataset_name} dataset (Scale multiplied: {multiplied_scaling_factor})...')
     else:
-        print(f'Training {model_name} on {dataset_name} dataset...')
+        logger.info(f'Training {model_name} on {dataset_name} dataset...')
 
-    train_losses, val_losses, trained_epochs = train_and_validate(
-        model, train_loader, val_loader,
-        num_epochs=num_epochs, patience=patience,
-        with_additional_params = True if additional_params else False,
-        multiplied_scaling_factor = multiplied_scaling_factor
+    train_losses, val_losses, trained_epochs, max_absolute_error, training_time = train_and_validate(
+        model,
+        train_loader,
+        val_loader,
+        device,
+        num_epochs=num_epochs,
+        patience=patience,
+        learning_rate=learning_rate,
+        with_additional_params=bool(additional_params),
+        multiplied_scaling_factor=multiplied_scaling_factor
     )
 
-    plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name, loss_curves_dir)
+    # Save the model
     torch.save(model.state_dict(), model_path)
-    print(f'Saved {model_name} on {dataset_name} dataset to {model_path}')
+    logger.info(f'Saved {model_name} on {dataset_name} dataset to {model_path}')
 
-    return {
+    # Plot and save loss curves
+    plot_and_save_loss_curves(train_losses, val_losses, model_name, dataset_name, loss_curves_dir)
+
+    # Update stats with max_absolute_error and training_time
+    stats = {
         "model_name": model_name,
         "dataset_name": dataset_name,
-        "train_loss": train_losses[-1],
-        "val_loss": val_losses[-1],
-        "epochs_trained": trained_epochs,
+        "query": query,
         "with_scaling_factor": with_scaling_factor,
         "multiplied_scaling_factor": multiplied_scaling_factor,
         "additional_params": additional_params,
+        "train_loss mean_absolute_error": train_losses[-1],
+        "val_loss mean_absolute_error": val_losses[-1],
+        "max_absolute_error": max_absolute_error,
+        "epochs_trained": trained_epochs,
+        "training_time": training_time
     }
+
+    return stats
 
 
 def main(args):
@@ -239,7 +286,7 @@ def main(args):
 
     # Use the GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    logger.info(f"Using device: {device}")
 
     # Define the datasets
     query = 'BodyPart == "Stamm"'
@@ -260,25 +307,27 @@ def main(args):
 
     datasets_scaling_thickness_spacing = {
         "axial_spacing_thickness_scaling": CtScanDatasetExtended(df_query=query,
-                                                  pixel_array_transform=Transforms.axial_projection_imagenet_transforms(),
-                                                  additional_features=['PixelSpacing', 'SliceThickness'],
-                                                  imagenet_scaling_factor=True),
+                                                                 pixel_array_transform=Transforms.axial_projection_imagenet_transforms(),
+                                                                 additional_features=['PixelSpacing', 'SliceThickness'],
+                                                                 imagenet_scaling_factor=True),
         "coronal_spacing_thickness_scaling": CtScanDatasetExtended(df_query=query,
-                                                 pixel_array_transform=Transforms.coronal_projection_imagenet_transforms(),
-                                                 additional_features=['PixelSpacing', 'SliceThickness'],
-                                                 imagenet_scaling_factor=True),
+                                                                   pixel_array_transform=Transforms.coronal_projection_imagenet_transforms(),
+                                                                   additional_features=['PixelSpacing',
+                                                                                        'SliceThickness'],
+                                                                   imagenet_scaling_factor=True),
         "sagittal_spacing_thickness_scaling": CtScanDatasetExtended(df_query=query,
-                                                  pixel_array_transform=Transforms.sagittal_projection_imagenet_transforms(),
-                                                  additional_features=['PixelSpacing', 'SliceThickness'],
-                                                  imagenet_scaling_factor=True)
+                                                                    pixel_array_transform=Transforms.sagittal_projection_imagenet_transforms(),
+                                                                    additional_features=['PixelSpacing',
+                                                                                         'SliceThickness'],
+                                                                    imagenet_scaling_factor=True)
     }
 
     backends = [
         "resnet18",
-        #"resnet50",
-        #"resnet152",
-        #"vit_b_16",
-        #"vit_b_32"
+        "resnet50",
+        "resnet152",
+        "vit_b_16",
+        "vit_b_32"
     ]
 
     model_statistics = []
@@ -288,7 +337,9 @@ def main(args):
         for model_name in backends:
             stats = train_model_on_dataset(
                 model_name, dataset_name, dataset,
-                num_epochs=args.epochs, patience=args.patience
+                query=query,
+                num_epochs=args.epochs, patience=args.patience,
+                device=device
             )
             if stats:
                 model_statistics.append(stats)
@@ -300,24 +351,27 @@ def main(args):
         for model_name in backends:
             stats = train_model_on_dataset(
                 model_name, dataset_name, dataset,
+                query=query,
                 num_epochs=args.epochs, patience=args.patience,
-                with_scaling_factor=True, additional_params=additional_params
+                with_scaling_factor=True, additional_params=additional_params,
+                device=device
             )
             if stats:
                 model_statistics.append(stats)
-    
-    
+
     # Train and validate each model with multiplied scaling factor on each dataset
     for dataset_name, dataset in datasets_scaling_factor.items():
         additional_params = ['scaling_factor']  # Example additional parameter
-        
+
         for model_name in backends:
             stats = train_model_on_dataset(
                 model_name, dataset_name, dataset,
+                query=query,
                 num_epochs=args.epochs, patience=args.patience,
                 with_scaling_factor=True,
                 multiplied_scaling_factor=True,
-                additional_params=additional_params
+                additional_params=additional_params,
+                device=device
             )
             if stats:
                 model_statistics.append(stats)
@@ -329,8 +383,10 @@ def main(args):
         for model_name in backends:
             stats = train_model_on_dataset(
                 model_name, dataset_name, dataset,
+                query=query,
                 num_epochs=args.epochs, patience=args.patience,
-                with_scaling_factor=True, additional_params=additional_params
+                with_scaling_factor=True, additional_params=additional_params,
+                device=device
             )
             if stats:
                 model_statistics.append(stats)
@@ -343,6 +399,8 @@ if __name__ == '__main__':
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing models.")
     parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for training.")
     parser.add_argument("--patience", type=int, default=5, help="Patience for early stopping.")
+    parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training and validation.")
+    parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate for the optimizer.")
     args = parser.parse_args()
 
     main(args)
