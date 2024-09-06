@@ -6,7 +6,7 @@
 #SBATCH --gres=gpu:1                                        # Number of GPUs
 #SBATCH --ntasks=1                                          # Number of processes
 #SBATCH --time=1-00:00                                      # Runtime in D-HH:MM
-#SBATCH --mem-per-cpu=1G                                    # Memory per CPU allocated
+#SBATCH --mem-per-cpu=4G                                    # Memory per CPU allocated
 #SBATCH --cpus-per-task=8                                  # CPU cores requested per task
 
 
