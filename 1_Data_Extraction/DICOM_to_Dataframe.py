@@ -86,8 +86,9 @@ def extract_series_data(series, scan_base, root_dir, read_images=False):
 
     if read_images:
         if npy_filepath.exists():
-            logger.info(f"Skipping image processing file '{npy_filename}' already exists.")
+            logger.info(f"Skipping pixel array reading for series '{scan['SeriesId']}', file '{npy_filename}' already exists.")
             scan['PixelArrayFile'] = npy_filename
+            scan.update(get_fields_for_dataset(read_image(instance_paths[0])))
         else:
             with ThreadPoolExecutor() as executor:
                 instances = list(executor.map(read_image, instance_paths))
