@@ -19,8 +19,4 @@ cd /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/1_Data_Extraction
 echo "Extracting DICOM files to Dataframe"
 python DICOM_to_Dataframe.py -r /srv/GadM/Datasets/AIBA_CT_KG/ &&
 
-echo "Cleaning Dataframe"
-cd ../3_Data_Preparation
-python DataframeCleaning.py
-
 exit
