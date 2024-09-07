@@ -129,7 +129,7 @@ def get_fields_for_dataset(dataset, prefix=''):
     dataset_dict = {}
 
     for field in dataset.dir():
-        if field in ['PixelData', 'PatientID', 'ContrastFlowDuration']: # Contrast Flow Duration lead to an error
+        if field in ['PixelData', 'PatientID', 'ContrastFlowDuration', 'ContrastFlowRate']: # Contrast Flow Dur/Rate lead to an error
             continue
 
         value = getattr(dataset, field, None)
