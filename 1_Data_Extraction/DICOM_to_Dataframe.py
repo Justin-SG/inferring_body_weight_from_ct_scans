@@ -28,7 +28,6 @@ def get_dicomdir_paths(path):
     logger.info(f"Found {len(paths)} DICOMDIR paths")
     return paths
 
-
 def get_dicom_dataframe(path, read_images=False):
     """Create a DataFrame containing information from DICOMDIR files in the specified directory."""
     logger.info(f"Creating DataFrame from DICOMDIR files in '{path}'")
@@ -44,11 +43,9 @@ def get_dicom_dataframe(path, read_images=False):
 
     return pd.DataFrame(scans)
 
-
 def read_image(instance_path):
     """Read a DICOM image from the given path."""
     return dcmread(instance_path)
-
 
 def extract_patient_data(patient, root_dir, dicomdir_filename, read_images=False):
     """Extract scan data from a patient record."""
@@ -69,7 +66,6 @@ def extract_patient_data(patient, root_dir, dicomdir_filename, read_images=False
 
     return scans
 
-
 def extract_series_data(series, scan_base, root_dir, read_images=False):
     """Extract scan data from a series record."""
     scan = scan_base.copy()
@@ -79,26 +75,32 @@ def extract_series_data(series, scan_base, root_dir, read_images=False):
         for image in series.children if image.DirectoryRecordType == "IMAGE"
     ]
 
+    project_dir = Path(__file__).resolve().parent.parent
+    pixel_array_dir = project_dir / 'Data' / 'PixelArray'
+    create_directory_if_not_exist(pixel_array_dir)
+
+    # Generate the expected filename for the .npy file
+    counter = Counter.count()
+    npy_filename = f'Scan_{counter}.npy'
+    npy_filepath = pixel_array_dir / npy_filename
+
     if read_images:
-        counter = Counter.count()
-        with ThreadPoolExecutor() as executor:
-            instances = list(executor.map(read_image, instance_paths))
+        if npy_filepath.exists():
+            logger.info(f"Skipping image processing file '{npy_filename}' already exists.")
+            scan['PixelArrayFile'] = npy_filename
+        else:
+            with ThreadPoolExecutor() as executor:
+                instances = list(executor.map(read_image, instance_paths))
 
-        # Threading may cause out-of-order slices therefore
-        # sort the instances by SliceLocation to ensure the slices are in the correct order again
-        instances.sort(key=lambda instance: instance.SliceLocation)
+            # Sort the instances by SliceLocation to ensure correct order
+            instances.sort(key=lambda instance: instance.SliceLocation)
 
-        pixel_array_3d = np.stack([instance.pixel_array for instance in instances])
-        scan.update(get_fields_for_dataset(instances[0]))
+            pixel_array_3d = np.stack([instance.pixel_array for instance in instances])
+            scan.update(get_fields_for_dataset(instances[0]))
 
-        # Save the pixel array to the PixelArray subfolder within the Data folder
-        project_dir = Path(__file__).resolve().parent.parent
-        pixel_array_dir = project_dir / 'Data' / 'PixelArray'
-        create_directory_if_not_exist(pixel_array_dir)
-
-        scan['PixelArrayFile'] = f'Scan_{counter}.npy'
-        store_pixel_array_to_file(pixel_array_dir / scan['PixelArrayFile'], pixel_array_3d)
-
+            # Save the pixel array to the PixelArray subfolder within the Data folder
+            scan['PixelArrayFile'] = npy_filename
+            store_pixel_array_to_file(npy_filepath, pixel_array_3d)
     else:
         scan.update(get_fields_for_dataset(read_image(instance_paths[0])))
 
@@ -106,12 +108,10 @@ def extract_series_data(series, scan_base, root_dir, read_images=False):
 
     return [scan]
 
-
 def store_pixel_array_to_file(file_path, pixel_array):
     """Store the pixel array of a scan to a file."""
     file_path = Path(file_path)
     np.save(file_path, pixel_array)
-
 
 def extract_scans_from_dicomdir(dicomdir, read_images=False):
     """Extract CT scan information from a DICOMDIR object."""
@@ -123,13 +123,12 @@ def extract_scans_from_dicomdir(dicomdir, read_images=False):
 
     return scans
 
-
 def get_fields_for_dataset(dataset, prefix=''):
     """Extract all fields from a pydicom dataset into a dictionary."""
     dataset_dict = {}
 
     for field in dataset.dir():
-        if field in ['PixelData', 'PatientID']:
+        if field in ['PixelData', 'PatientID', 'ContrastFlowDuration']: # Contrast Flow Duration lead to an error
             continue
 
         value = getattr(dataset, field, None)
@@ -146,12 +145,10 @@ def get_fields_for_dataset(dataset, prefix=''):
 
     return dataset_dict
 
-
 def create_directory_if_not_exist(path):
     """Creates directories if they do not exist."""
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
-
 
 def main():
     # Argument parsing
@@ -171,7 +168,6 @@ def main():
     create_directory_if_not_exist(data_dir)
     df.to_feather(data_dir / 'dicom_df.feather', version=2, compression='zstd')
     logger.info(f"DataFrame saved to '{data_dir / 'dicom_df.feather'}' successfully!")
-
 
 if __name__ == "__main__":
     main()
