@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def data_cleaning(dicom_df):
     logger.info("Cleaning the DICOM metadata...")
     dicom_df.loc[:, "PatientAge"] = dicom_df["PatientAge"].fillna('-1')  # Fill missing values with -1
-    dicom_df.loc[:, "PatientAge"] = dicom_df["PatientAge"].str.replace('Y', '').astype(int)  # Remove 'Y' and convert to int
+    dicom_df.loc[:, "PatientAge"] = dicom_df["PatientAge"].str.replace(r'[A-Za-z]', '', regex=True).astype(int) # Remove letters from PatientAge
     dicom_df.loc[:, "BodyPart"] = dicom_df["ProcedureCodeSequence.CodeMeaning"].str.split(".", expand=True)[2]  # Extract body part from ProcedureCodeSequence.CodeMeaning
     dicom_df.loc[:, "PixelSpacing"] = dicom_df["PixelSpacing"].apply(lambda x: x[0])  # Extract the first value of PixelSpacing (same everywhere)
 
