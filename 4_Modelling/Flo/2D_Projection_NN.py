@@ -323,7 +323,7 @@ def main(args):
     }
 
     backends = [
-        "resnet18",
+        #"resnet18",
         "resnet50",
         "resnet152",
         "vit_b_16",
