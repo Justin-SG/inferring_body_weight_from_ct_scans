@@ -343,6 +343,7 @@ def main(args):
             )
             if stats:
                 model_statistics.append(stats)
+                save_model_stats(model_statistics, eval_dir)
 
     # Train and validate each scaled model on each dataset (with scaling factor)
     for dataset_name, dataset in datasets_scaling_factor.items():
@@ -358,6 +359,7 @@ def main(args):
             )
             if stats:
                 model_statistics.append(stats)
+                save_model_stats(model_statistics, eval_dir)
 
     # Train and validate each model with multiplied scaling factor on each dataset
     for dataset_name, dataset in datasets_scaling_factor.items():
@@ -375,6 +377,7 @@ def main(args):
             )
             if stats:
                 model_statistics.append(stats)
+                save_model_stats(model_statistics, eval_dir)
 
     # Train and validate each model with additional features on each dataset
     for dataset_name, dataset in datasets_scaling_thickness_spacing.items():
@@ -390,8 +393,7 @@ def main(args):
             )
             if stats:
                 model_statistics.append(stats)
-
-    save_model_stats(model_statistics, eval_dir)
+                save_model_stats(model_statistics, eval_dir)
 
 
 if __name__ == '__main__':
