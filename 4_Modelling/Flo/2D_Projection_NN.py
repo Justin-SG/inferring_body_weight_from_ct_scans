@@ -272,7 +272,7 @@ def train_model_on_dataset(model_name,
         "val_loss mean_absolute_error": val_losses[-1],
         "max_absolute_error": max_absolute_error,
         "epochs_trained": trained_epochs,
-        "training_time": training_time
+        "training_time (seconds)": training_time
     }
 
     return stats
@@ -325,7 +325,7 @@ def main(args):
     backends = [
         "resnet18",
         "resnet50",
-        #"resnet152",
+        "resnet152",
         "vit_b_16",
         "vit_b_32"
     ]

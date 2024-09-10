@@ -1,0 +1,17 @@
+model_name,dataset_name,query,with_scaling_factor,multiplied_scaling_factor,additional_params,train_loss mean_absolute_error,val_loss mean_absolute_error,max_absolute_error,epochs_trained,training_time (seconds)
+resnet18,axial,"BodyPart == ""Stamm""",False,False,,4.3094,6.8288,37.3711,10,16067.0
+resnet50,axial,"BodyPart == ""Stamm""",False,False,,4.5872,5.9688,35.8508,10,14791.0
+vit_b_16,axial,"BodyPart == ""Stamm""",False,False,,7.7868,6.8818,33.164,10,15275.0
+vit_b_32,axial,"BodyPart == ""Stamm""",False,False,,6.8786,7.0116,33.0049,10,14293.0
+resnet18,coronal,"BodyPart == ""Stamm""",False,False,,4.9607,4.5564,27.9759,10,14608.0
+resnet50,coronal,"BodyPart == ""Stamm""",False,False,,4.5081,4.834,35.8572,10,14625.0
+vit_b_16,coronal,"BodyPart == ""Stamm""",False,False,,8.2549,7.4156,38.966,10,15352.0
+vit_b_32,coronal,"BodyPart == ""Stamm""",False,False,,8.6093,7.5051,38.7023,10,15637.0
+resnet18,sagittal,"BodyPart == ""Stamm""",False,False,,4.3687,7.9907,29.2464,10,15551.0
+resnet50,sagittal,"BodyPart == ""Stamm""",False,False,,4.6426,12.1377,42.6397,10,14846.0
+vit_b_16,sagittal,"BodyPart == ""Stamm""",False,False,,7.7205,7.5264,36.2783,10,15159.0
+vit_b_32,sagittal,"BodyPart == ""Stamm""",False,False,,7.95,8.8144,35.7525,10,14263.0
+resnet18,coronal_scaling,"BodyPart == ""Stamm""",True,False,['scaling_factor'],5.4602,7.002,44.7177,10,15352.0
+resnet50,coronal_scaling,"BodyPart == ""Stamm""",True,False,['scaling_factor'],5.8238,7.935,32.2683,8,11925.0
+vit_b_16,coronal_scaling,"BodyPart == ""Stamm""",True,False,['scaling_factor'],7.5837,6.8591,42.6103,10,15826.0
+vit_b_32,coronal_scaling,"BodyPart == ""Stamm""",True,False,['scaling_factor'],8.4595,7.2868,42.1269,10,15725.0

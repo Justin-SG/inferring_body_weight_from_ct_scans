@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=extract_dicom                            # Job name
-#SBATCH --output=%x_%j.out                                  # Output file (includes job name and ID)
-#SBATCH --error=%x_%j.err                                   # Error file (includes job name and ID)
+#SBATCH --output=Log/%x_%j.out                                  # Output file (includes job name and ID)
+#SBATCH --error=Log/%x_%j.err                                   # Error file (includes job name and ID)
 #SBATCH --gres=gpu:1                                        # Number of GPUs
 #SBATCH --ntasks=1                                          # Number of processes
 #SBATCH --time=1-00:00                                      # Runtime in D-HH:MM
