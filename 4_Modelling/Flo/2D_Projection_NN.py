@@ -272,7 +272,9 @@ def train_model_on_dataset(model_name,
         "val_loss mean_absolute_error": val_losses[-1],
         "max_absolute_error": max_absolute_error,
         "epochs_trained": trained_epochs,
-        "training_time (seconds)": training_time
+        "training_time (seconds)": training_time,
+        "batch_size": batch_size,
+        "learning_rate": learning_rate
     }
 
     return stats

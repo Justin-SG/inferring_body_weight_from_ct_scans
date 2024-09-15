@@ -17,6 +17,6 @@ conda activate /home2/jschoenberg/miniconda/envs/infer_body/
 cd /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/4_Modelling/Flo
 
 echo "Training 2D Scan Neural Networks"
-python 2D_Projection_NN.py --epochs=10 --batch_size=64 --learning_rate=0.001 --patience=5
+python 2D_Projection_NN.py --epochs=20 --batch_size=64 --learning_rate=0.001 --patience=5
 
 exit
