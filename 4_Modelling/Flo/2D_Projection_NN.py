@@ -186,6 +186,9 @@ def save_model_stats(stats, eval_dir):
 
     if stats_file.exists():
         existing_stats = pd.read_csv(stats_file)
+        # Get rows which are in stats_df but not in existing_stats
+        stats_df = stats_df[~stats_df.isin(existing_stats.to_dict('records'))]
+        # Concatenate the two dataframes
         stats_df = pd.concat([existing_stats, stats_df], ignore_index=True)
 
     stats_df.to_csv(stats_file, index=False)
