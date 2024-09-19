@@ -1,0 +1,184 @@
+2024-09-14 14:11:54,369 - INFO - Using device: cuda
+2024-09-14 14:11:54,545 - INFO - Skipping resnet18 on axial dataset (model already exists).
+2024-09-14 14:11:54,546 - INFO - Skipping resnet50 on axial dataset (model already exists).
+2024-09-14 14:11:54,547 - INFO - Skipping resnet152 on axial dataset (model already exists).
+2024-09-14 14:11:54,549 - INFO - Skipping vit_b_16 on axial dataset (model already exists).
+2024-09-14 14:11:54,550 - INFO - Skipping vit_b_32 on axial dataset (model already exists).
+2024-09-14 14:11:54,551 - INFO - Skipping resnet18 on coronal dataset (model already exists).
+2024-09-14 14:11:54,552 - INFO - Skipping resnet50 on coronal dataset (model already exists).
+2024-09-14 14:11:54,553 - INFO - Skipping resnet152 on coronal dataset (model already exists).
+2024-09-14 14:11:54,554 - INFO - Skipping vit_b_16 on coronal dataset (model already exists).
+2024-09-14 14:11:54,555 - INFO - Skipping vit_b_32 on coronal dataset (model already exists).
+2024-09-14 14:11:54,556 - INFO - Skipping resnet18 on sagittal dataset (model already exists).
+2024-09-14 14:11:54,557 - INFO - Skipping resnet50 on sagittal dataset (model already exists).
+2024-09-14 14:11:54,557 - INFO - Skipping resnet152 on sagittal dataset (model already exists).
+2024-09-14 14:11:54,557 - INFO - Skipping vit_b_16 on sagittal dataset (model already exists).
+2024-09-14 14:11:54,558 - INFO - Skipping vit_b_32 on sagittal dataset (model already exists).
+2024-09-14 14:11:54,559 - INFO - Skipping resnet18 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,560 - INFO - Skipping resnet50 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,560 - INFO - Skipping resnet152 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,561 - INFO - Skipping vit_b_16 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,561 - INFO - Skipping vit_b_32 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,562 - INFO - Skipping resnet18 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,562 - INFO - Skipping resnet50 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,563 - INFO - Skipping resnet152 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,564 - INFO - Skipping vit_b_16 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,564 - INFO - Skipping vit_b_32 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,565 - INFO - Skipping resnet18 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,565 - INFO - Skipping resnet50 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,566 - INFO - Skipping resnet152 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,566 - INFO - Skipping vit_b_16 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,567 - INFO - Skipping vit_b_32 on coronal_scaling dataset (model already exists).
+2024-09-14 14:11:54,567 - INFO - Skipping resnet18 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,568 - INFO - Skipping resnet50 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,569 - INFO - Skipping resnet152 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,569 - INFO - Skipping vit_b_16 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,570 - INFO - Skipping vit_b_32 on sagittal_scaling dataset (model already exists).
+2024-09-14 14:11:54,570 - INFO - Skipping resnet18 on axial_spacing_thickness_scaling dataset (model already exists).
+2024-09-14 14:11:54,571 - INFO - Skipping resnet50 on axial_spacing_thickness_scaling dataset (model already exists).
+2024-09-14 14:11:54,571 - INFO - Skipping resnet152 on axial_spacing_thickness_scaling dataset (model already exists).
+2024-09-14 14:11:54,572 - INFO - Skipping vit_b_16 on axial_spacing_thickness_scaling dataset (model already exists).
+2024-09-14 14:12:00,476 - INFO - Training vit_b_32 on axial_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-14 14:43:50,583 - INFO - Epoch 1/10, Train Loss: 33.9688, Val Loss: 7.7817, Max Abs Error: 39.1795
+2024-09-14 15:13:57,086 - INFO - Epoch 2/10, Train Loss: 8.8026, Val Loss: 7.1249, Max Abs Error: 32.7350
+2024-09-14 15:38:59,695 - INFO - Epoch 3/10, Train Loss: 8.0311, Val Loss: 7.6195, Max Abs Error: 34.5061
+2024-09-14 16:04:38,741 - INFO - Epoch 4/10, Train Loss: 7.7459, Val Loss: 6.6834, Max Abs Error: 32.7305
+2024-09-14 16:30:57,062 - INFO - Epoch 5/10, Train Loss: 7.5318, Val Loss: 6.8486, Max Abs Error: 102.0208
+2024-09-14 16:58:22,929 - INFO - Epoch 6/10, Train Loss: 7.1708, Val Loss: 7.3446, Max Abs Error: 32.9596
+2024-09-14 17:26:29,736 - INFO - Epoch 7/10, Train Loss: 7.3524, Val Loss: 6.4004, Max Abs Error: 30.4342
+2024-09-14 17:55:58,264 - INFO - Epoch 8/10, Train Loss: 7.0824, Val Loss: 6.6248, Max Abs Error: 31.9114
+2024-09-14 18:25:39,728 - INFO - Epoch 9/10, Train Loss: 7.1634, Val Loss: 7.7881, Max Abs Error: 37.2189
+2024-09-14 18:56:12,451 - INFO - Epoch 10/10, Train Loss: 6.7347, Val Loss: 6.3240, Max Abs Error: 32.4488
+2024-09-14 18:56:14,054 - INFO - Saved vit_b_32 on axial_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/vit_b_32_scaling_factor_pixel_spacing_slice_thickness_axial_spacing_thickness_scaling.pth
+2024-09-14 18:56:14,417 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/vit_b_32_axial_spacing_thickness_scaling_loss_curve.png
+2024-09-14 18:56:21,034 - INFO - Training resnet18 on coronal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-14 19:27:09,515 - INFO - Epoch 1/10, Train Loss: 27.8794, Val Loss: 8.1169, Max Abs Error: 37.2207
+2024-09-14 19:57:30,457 - INFO - Epoch 2/10, Train Loss: 6.9899, Val Loss: 6.3007, Max Abs Error: 31.8282
+2024-09-14 20:27:59,879 - INFO - Epoch 3/10, Train Loss: 7.3536, Val Loss: 5.4540, Max Abs Error: 29.6373
+2024-09-14 20:58:34,266 - INFO - Epoch 4/10, Train Loss: 6.2130, Val Loss: 7.9940, Max Abs Error: 43.7787
+2024-09-14 21:28:33,485 - INFO - Epoch 5/10, Train Loss: 6.1264, Val Loss: 4.9038, Max Abs Error: 28.2744
+2024-09-14 21:57:24,775 - INFO - Epoch 6/10, Train Loss: 5.8234, Val Loss: 6.7430, Max Abs Error: 38.1254
+2024-09-14 22:25:53,630 - INFO - Epoch 7/10, Train Loss: 5.7930, Val Loss: 5.9577, Max Abs Error: 27.0693
+2024-09-14 22:54:13,820 - INFO - Epoch 8/10, Train Loss: 5.6653, Val Loss: 9.3259, Max Abs Error: 41.3656
+2024-09-14 23:21:53,692 - INFO - Epoch 9/10, Train Loss: 5.6377, Val Loss: 6.1710, Max Abs Error: 51.1572
+2024-09-14 23:48:58,314 - INFO - Epoch 10/10, Train Loss: 4.9493, Val Loss: 6.9972, Max Abs Error: 26.7303
+2024-09-14 23:48:58,316 - INFO - Early stopping triggered.
+2024-09-14 23:48:58,631 - INFO - Saved resnet18 on coronal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/resnet18_scaling_factor_pixel_spacing_slice_thickness_coronal_spacing_thickness_scaling.pth
+2024-09-14 23:48:58,816 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/resnet18_coronal_spacing_thickness_scaling_loss_curve.png
+2024-09-14 23:49:04,837 - INFO - Training resnet50 on coronal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-15 00:19:58,715 - INFO - Epoch 1/10, Train Loss: 18.8844, Val Loss: 8.6446, Max Abs Error: 37.8141
+2024-09-15 00:51:37,460 - INFO - Epoch 2/10, Train Loss: 6.9501, Val Loss: 11.8082, Max Abs Error: 56.4511
+2024-09-15 01:21:52,692 - INFO - Epoch 3/10, Train Loss: 6.4411, Val Loss: 5.7739, Max Abs Error: 33.3311
+2024-09-15 01:47:43,253 - INFO - Epoch 4/10, Train Loss: 6.9788, Val Loss: 6.1801, Max Abs Error: 43.7037
+2024-09-15 02:12:10,780 - INFO - Epoch 5/10, Train Loss: 6.0565, Val Loss: 14.0328, Max Abs Error: 51.2664
+2024-09-15 02:36:36,179 - INFO - Epoch 6/10, Train Loss: 6.4385, Val Loss: 9.7469, Max Abs Error: 43.8007
+2024-09-15 03:00:00,680 - INFO - Epoch 7/10, Train Loss: 6.2899, Val Loss: 11.8746, Max Abs Error: 54.1124
+2024-09-15 03:23:15,171 - INFO - Epoch 8/10, Train Loss: 5.7698, Val Loss: 10.1341, Max Abs Error: 56.0406
+2024-09-15 03:23:15,173 - INFO - Early stopping triggered.
+2024-09-15 03:23:15,705 - INFO - Saved resnet50 on coronal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/resnet50_scaling_factor_pixel_spacing_slice_thickness_coronal_spacing_thickness_scaling.pth
+2024-09-15 03:23:15,898 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/resnet50_coronal_spacing_thickness_scaling_loss_curve.png
+2024-09-15 03:23:21,882 - INFO - Training resnet152 on coronal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-15 03:48:14,020 - INFO - Epoch 1/10, Train Loss: 22.4948, Val Loss: 6.2240, Max Abs Error: 37.4306
+2024-09-15 04:12:42,876 - INFO - Epoch 2/10, Train Loss: 7.8702, Val Loss: 9.3257, Max Abs Error: 36.2873
+2024-09-15 04:36:42,901 - INFO - Epoch 3/10, Train Loss: 6.4042, Val Loss: 12.7678, Max Abs Error: 36.9791
+2024-09-15 05:01:28,214 - INFO - Epoch 4/10, Train Loss: 5.2443, Val Loss: 5.6230, Max Abs Error: 36.9586
+2024-09-15 05:27:18,456 - INFO - Epoch 5/10, Train Loss: 5.8308, Val Loss: 16.2450, Max Abs Error: 44.9286
+2024-09-15 05:54:11,955 - INFO - Epoch 6/10, Train Loss: 6.2394, Val Loss: 6.1768, Max Abs Error: 39.5876
+2024-09-15 06:20:26,775 - INFO - Epoch 7/10, Train Loss: 5.5861, Val Loss: 9.0785, Max Abs Error: 36.5220
+2024-09-15 06:46:21,275 - INFO - Epoch 8/10, Train Loss: 4.7358, Val Loss: 9.1827, Max Abs Error: 28.6714
+2024-09-15 07:12:24,066 - INFO - Epoch 9/10, Train Loss: 5.2569, Val Loss: 9.4702, Max Abs Error: 57.4319
+2024-09-15 07:12:24,068 - INFO - Early stopping triggered.
+2024-09-15 07:12:25,206 - INFO - Saved resnet152 on coronal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/resnet152_scaling_factor_pixel_spacing_slice_thickness_coronal_spacing_thickness_scaling.pth
+2024-09-15 07:12:25,405 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/resnet152_coronal_spacing_thickness_scaling_loss_curve.png
+2024-09-15 07:12:31,359 - INFO - Training vit_b_16 on coronal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-15 07:38:52,660 - INFO - Epoch 1/10, Train Loss: 35.6796, Val Loss: 11.2196, Max Abs Error: 47.3614
+2024-09-15 08:05:15,779 - INFO - Epoch 2/10, Train Loss: 15.0810, Val Loss: 12.1137, Max Abs Error: 65.0751
+2024-09-15 08:32:04,412 - INFO - Epoch 3/10, Train Loss: 15.2956, Val Loss: 12.3832, Max Abs Error: 59.2232
+2024-09-15 08:59:22,753 - INFO - Epoch 4/10, Train Loss: 11.6882, Val Loss: 10.7580, Max Abs Error: 50.8424
+2024-09-15 09:25:13,504 - INFO - Epoch 5/10, Train Loss: 11.6795, Val Loss: 10.4315, Max Abs Error: 49.5615
+2024-09-15 09:50:18,979 - INFO - Epoch 6/10, Train Loss: 11.1564, Val Loss: 11.2063, Max Abs Error: 44.7416
+2024-09-15 10:15:35,287 - INFO - Epoch 7/10, Train Loss: 10.5558, Val Loss: 10.3540, Max Abs Error: 43.8280
+2024-09-15 10:41:35,682 - INFO - Epoch 8/10, Train Loss: 10.0552, Val Loss: 9.2069, Max Abs Error: 42.6900
+2024-09-15 11:08:52,644 - INFO - Epoch 9/10, Train Loss: 9.9697, Val Loss: 9.4071, Max Abs Error: 45.3768
+2024-09-15 11:36:24,096 - INFO - Epoch 10/10, Train Loss: 9.8633, Val Loss: 8.0064, Max Abs Error: 38.1597
+2024-09-15 11:36:25,918 - INFO - Saved vit_b_16 on coronal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/vit_b_16_scaling_factor_pixel_spacing_slice_thickness_coronal_spacing_thickness_scaling.pth
+2024-09-15 11:36:26,101 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/vit_b_16_coronal_spacing_thickness_scaling_loss_curve.png
+2024-09-15 11:36:32,238 - INFO - Training vit_b_32 on coronal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-15 12:02:38,542 - INFO - Epoch 1/10, Train Loss: 37.6422, Val Loss: 11.4097, Max Abs Error: 50.4844
+2024-09-15 12:29:37,060 - INFO - Epoch 2/10, Train Loss: 11.7674, Val Loss: 9.5799, Max Abs Error: 42.8354
+2024-09-15 12:55:53,756 - INFO - Epoch 3/10, Train Loss: 10.7162, Val Loss: 8.9066, Max Abs Error: 42.4656
+2024-09-15 13:22:11,602 - INFO - Epoch 4/10, Train Loss: 9.6735, Val Loss: 9.1683, Max Abs Error: 44.7350
+2024-09-15 13:49:00,428 - INFO - Epoch 5/10, Train Loss: 9.0219, Val Loss: 8.2806, Max Abs Error: 47.2804
+2024-09-15 14:15:31,407 - INFO - Epoch 6/10, Train Loss: 8.6042, Val Loss: 7.6709, Max Abs Error: 35.3300
+2024-09-15 14:41:58,873 - INFO - Epoch 7/10, Train Loss: 7.9438, Val Loss: 7.3392, Max Abs Error: 46.1539
+2024-09-15 15:08:30,734 - INFO - Epoch 8/10, Train Loss: 7.6340, Val Loss: 7.1209, Max Abs Error: 44.8120
+2024-09-15 15:34:55,961 - INFO - Epoch 9/10, Train Loss: 7.9298, Val Loss: 6.8392, Max Abs Error: 39.2299
+2024-09-15 16:01:38,706 - INFO - Epoch 10/10, Train Loss: 7.7191, Val Loss: 7.1654, Max Abs Error: 44.7661
+2024-09-15 16:01:40,282 - INFO - Saved vit_b_32 on coronal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/vit_b_32_scaling_factor_pixel_spacing_slice_thickness_coronal_spacing_thickness_scaling.pth
+2024-09-15 16:01:40,464 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/vit_b_32_coronal_spacing_thickness_scaling_loss_curve.png
+2024-09-15 16:01:46,451 - INFO - Training resnet18 on sagittal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-15 16:27:32,788 - INFO - Epoch 1/10, Train Loss: 32.5872, Val Loss: 15.4832, Max Abs Error: 69.0347
+2024-09-15 16:53:16,068 - INFO - Epoch 2/10, Train Loss: 6.7033, Val Loss: 7.7284, Max Abs Error: 48.2057
+2024-09-15 17:18:31,288 - INFO - Epoch 3/10, Train Loss: 5.9194, Val Loss: 8.2442, Max Abs Error: 31.2053
+2024-09-15 17:44:01,398 - INFO - Epoch 4/10, Train Loss: 5.8802, Val Loss: 5.9056, Max Abs Error: 34.8029
+2024-09-15 18:09:40,552 - INFO - Epoch 5/10, Train Loss: 5.4650, Val Loss: 12.3873, Max Abs Error: 41.9971
+2024-09-15 18:35:15,154 - INFO - Epoch 6/10, Train Loss: 5.7910, Val Loss: 9.0785, Max Abs Error: 36.4585
+2024-09-15 19:00:12,299 - INFO - Epoch 7/10, Train Loss: 5.5163, Val Loss: 9.4035, Max Abs Error: 29.6326
+2024-09-15 19:25:53,658 - INFO - Epoch 8/10, Train Loss: 4.9594, Val Loss: 13.3877, Max Abs Error: 34.3653
+2024-09-15 19:51:35,399 - INFO - Epoch 9/10, Train Loss: 4.9655, Val Loss: 19.6345, Max Abs Error: 41.9038
+2024-09-15 19:51:35,401 - INFO - Early stopping triggered.
+2024-09-15 19:51:35,715 - INFO - Saved resnet18 on sagittal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/resnet18_scaling_factor_pixel_spacing_slice_thickness_sagittal_spacing_thickness_scaling.pth
+2024-09-15 19:51:35,912 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/resnet18_sagittal_spacing_thickness_scaling_loss_curve.png
+2024-09-15 19:51:41,883 - INFO - Training resnet50 on sagittal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-15 20:17:06,775 - INFO - Epoch 1/10, Train Loss: 23.8386, Val Loss: 6.8655, Max Abs Error: 34.1724
+2024-09-15 20:43:18,278 - INFO - Epoch 2/10, Train Loss: 7.7142, Val Loss: 25.8250, Max Abs Error: 49.8687
+2024-09-15 21:08:56,051 - INFO - Epoch 3/10, Train Loss: 7.1015, Val Loss: 22.9869, Max Abs Error: 65.5355
+2024-09-15 21:34:33,646 - INFO - Epoch 4/10, Train Loss: 6.8447, Val Loss: 8.8500, Max Abs Error: 42.4077
+2024-09-15 22:01:05,011 - INFO - Epoch 5/10, Train Loss: 6.8686, Val Loss: 5.3946, Max Abs Error: 34.6878
+2024-09-15 22:27:10,008 - INFO - Epoch 6/10, Train Loss: 6.0080, Val Loss: 31.2672, Max Abs Error: 88.3001
+2024-09-15 22:52:57,725 - INFO - Epoch 7/10, Train Loss: 5.8408, Val Loss: 8.6118, Max Abs Error: 25.5491
+2024-09-15 23:18:28,360 - INFO - Epoch 8/10, Train Loss: 5.7040, Val Loss: 31.7021, Max Abs Error: 93.8193
+2024-09-15 23:44:48,242 - INFO - Epoch 9/10, Train Loss: 5.5558, Val Loss: 8.7624, Max Abs Error: 25.2374
+2024-09-16 00:15:43,281 - INFO - Epoch 10/10, Train Loss: 4.9757, Val Loss: 8.7743, Max Abs Error: 34.4858
+2024-09-16 00:15:43,283 - INFO - Early stopping triggered.
+2024-09-16 00:15:43,817 - INFO - Saved resnet50 on sagittal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/resnet50_scaling_factor_pixel_spacing_slice_thickness_sagittal_spacing_thickness_scaling.pth
+2024-09-16 00:15:43,996 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/resnet50_sagittal_spacing_thickness_scaling_loss_curve.png
+2024-09-16 00:15:49,999 - INFO - Training resnet152 on sagittal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-16 00:51:51,919 - INFO - Epoch 1/10, Train Loss: 21.6558, Val Loss: 10.5188, Max Abs Error: 59.0235
+2024-09-16 01:20:27,261 - INFO - Epoch 2/10, Train Loss: 7.3800, Val Loss: 5.5624, Max Abs Error: 43.8121
+2024-09-16 01:46:50,475 - INFO - Epoch 3/10, Train Loss: 6.0681, Val Loss: 5.7711, Max Abs Error: 30.2330
+2024-09-16 02:11:21,629 - INFO - Epoch 4/10, Train Loss: 5.8527, Val Loss: 17.3837, Max Abs Error: 43.3435
+2024-09-16 02:35:33,397 - INFO - Epoch 5/10, Train Loss: 5.5947, Val Loss: 13.4981, Max Abs Error: 54.4448
+2024-09-16 02:59:43,053 - INFO - Epoch 6/10, Train Loss: 5.4626, Val Loss: 4.6521, Max Abs Error: 39.5553
+2024-09-16 03:23:38,220 - INFO - Epoch 7/10, Train Loss: 5.5024, Val Loss: 4.9077, Max Abs Error: 33.2204
+2024-09-16 03:47:22,293 - INFO - Epoch 8/10, Train Loss: 5.2801, Val Loss: 8.7514, Max Abs Error: 32.8442
+2024-09-16 04:11:22,348 - INFO - Epoch 9/10, Train Loss: 4.3355, Val Loss: 22.4310, Max Abs Error: 53.9548
+2024-09-16 04:35:25,937 - INFO - Epoch 10/10, Train Loss: 4.8486, Val Loss: 7.6910, Max Abs Error: 29.5696
+2024-09-16 04:35:27,061 - INFO - Saved resnet152 on sagittal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/resnet152_scaling_factor_pixel_spacing_slice_thickness_sagittal_spacing_thickness_scaling.pth
+2024-09-16 04:35:27,257 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/resnet152_sagittal_spacing_thickness_scaling_loss_curve.png
+2024-09-16 04:35:33,452 - INFO - Training vit_b_16 on sagittal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-16 05:00:16,216 - INFO - Epoch 1/10, Train Loss: 33.7917, Val Loss: 11.9351, Max Abs Error: 52.3851
+2024-09-16 05:24:21,941 - INFO - Epoch 2/10, Train Loss: 10.8584, Val Loss: 13.4812, Max Abs Error: 47.4354
+2024-09-16 05:48:38,905 - INFO - Epoch 3/10, Train Loss: 9.8941, Val Loss: 8.0349, Max Abs Error: 44.4142
+2024-09-16 06:13:17,689 - INFO - Epoch 4/10, Train Loss: 8.9025, Val Loss: 8.9771, Max Abs Error: 39.3776
+2024-09-16 06:38:23,829 - INFO - Epoch 5/10, Train Loss: 8.8430, Val Loss: 8.1534, Max Abs Error: 36.1518
+2024-09-16 07:03:06,916 - INFO - Epoch 6/10, Train Loss: 8.3981, Val Loss: 7.9053, Max Abs Error: 47.7289
+2024-09-16 07:28:39,917 - INFO - Epoch 7/10, Train Loss: 7.9286, Val Loss: 7.7106, Max Abs Error: 47.5679
+2024-09-16 07:53:45,351 - INFO - Epoch 8/10, Train Loss: 7.8378, Val Loss: 7.2866, Max Abs Error: 41.6436
+2024-09-16 08:19:05,203 - INFO - Epoch 9/10, Train Loss: 7.4601, Val Loss: 7.6446, Max Abs Error: 43.9606
+2024-09-16 08:44:42,444 - INFO - Epoch 10/10, Train Loss: 7.6097, Val Loss: 7.3789, Max Abs Error: 45.8848
+2024-09-16 08:44:44,016 - INFO - Saved vit_b_16 on sagittal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/vit_b_16_scaling_factor_pixel_spacing_slice_thickness_sagittal_spacing_thickness_scaling.pth
+2024-09-16 08:44:44,204 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/vit_b_16_sagittal_spacing_thickness_scaling_loss_curve.png
+2024-09-16 08:44:50,194 - INFO - Training vit_b_32 on sagittal_spacing_thickness_scaling dataset (Scale multiplied: False)...
+2024-09-16 09:11:33,553 - INFO - Epoch 1/10, Train Loss: 46.0551, Val Loss: 12.8573, Max Abs Error: 57.5702
+2024-09-16 09:36:55,789 - INFO - Epoch 2/10, Train Loss: 13.5907, Val Loss: 13.3711, Max Abs Error: 60.6674
+2024-09-16 10:03:27,604 - INFO - Epoch 3/10, Train Loss: 13.8936, Val Loss: 12.8998, Max Abs Error: 60.9549
+2024-09-16 10:29:24,375 - INFO - Epoch 4/10, Train Loss: 13.6595, Val Loss: 12.6710, Max Abs Error: 58.9949
+2024-09-16 10:54:31,565 - INFO - Epoch 5/10, Train Loss: 13.5072, Val Loss: 13.1311, Max Abs Error: 59.8715
+2024-09-16 11:19:02,215 - INFO - Epoch 6/10, Train Loss: 13.3643, Val Loss: 12.8104, Max Abs Error: 61.6005
+2024-09-16 11:44:01,879 - INFO - Epoch 7/10, Train Loss: 9.6683, Val Loss: 8.3455, Max Abs Error: 39.6876
+2024-09-16 12:09:20,746 - INFO - Epoch 8/10, Train Loss: 8.8455, Val Loss: 8.8483, Max Abs Error: 43.9967
+2024-09-16 12:35:10,509 - INFO - Epoch 9/10, Train Loss: 8.4755, Val Loss: 7.5178, Max Abs Error: 33.2360
+2024-09-16 13:01:10,693 - INFO - Epoch 10/10, Train Loss: 7.7190, Val Loss: 7.2075, Max Abs Error: 40.4501
+2024-09-16 13:01:12,265 - INFO - Saved vit_b_32 on sagittal_spacing_thickness_scaling dataset to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/Model/Flo/vit_b_32_scaling_factor_pixel_spacing_slice_thickness_sagittal_spacing_thickness_scaling.pth
+2024-09-16 13:01:12,459 - INFO - Saved loss curves to /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/5_Evaluation/Flo/Loss_Curves/vit_b_32_sagittal_spacing_thickness_scaling_loss_curve.png
