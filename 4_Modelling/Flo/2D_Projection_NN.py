@@ -400,6 +400,8 @@ def main(args):
                 model_statistics.append(stats)
                 save_model_stats(model_statistics, eval_dir)
 
+    # TODO Think about Variance/Std/average projections
+    # TODO Show the results of the models -> Lower learning rate? More epochs? Different model?
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train and validate CT scan models.")
