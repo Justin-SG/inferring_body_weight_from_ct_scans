@@ -106,7 +106,8 @@ def extract_series_data(series, scan_base, root_dir, read_images=False):
         scan.update(get_fields_for_dataset(read_image(instance_paths[0])))
 
     scan['SliceCount'] = len(instance_paths)
-
+    scan['SliceDirectory'] = os.path.dirname(instance_paths[0])
+    
     return [scan]
 
 def store_pixel_array_to_file(file_path, pixel_array):

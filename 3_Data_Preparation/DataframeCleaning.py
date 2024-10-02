@@ -32,8 +32,10 @@ if __name__ == '__main__':
 
     # Get only the columns we need
     logger.info("Selecting the necessary columns...")
-    dicom_df = dicom_df[["PatientId", "PatientAge", "PatientSex", "PatientWeight", "PatientSize", "BodyPart", "Rows",
-                         "Columns", "SliceCount", "PixelSpacing", "SliceThickness", "PixelArrayFile"]]
+    desired_columns = ["PatientId", "PatientAge", "PatientSex", "PatientWeight", "PatientSize", "BodyPart", "Rows",
+                         "Columns", "SliceCount", "PixelSpacing", "SliceThickness", "PixelArrayFile", "SliceDirectory"]
+    valid_columns = [col for col in desired_columns if col in dicom_df.columns]
+    dicom_df = dicom_df[valid_columns]
 
     # Save the cleaned dataframe
     cleaned_dicom_df_path = data_dir / 'cleaned_dicom_df.feather'
