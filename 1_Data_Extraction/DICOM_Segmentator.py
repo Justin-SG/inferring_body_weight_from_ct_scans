@@ -42,20 +42,6 @@ def getOrCreateSegmentationDataFrame():
     return segmentation_df
 
 
-def processNiftiFile(nifti_file_path):
-    nifti_file = nib.load(nifti_file_path)
-
-    segmentation_data = nifti_file.get_fdata()
-
-    non_zero_pixels = np.count_nonzero(segmentation_data)
-
-    # Create column name using filename without .nii.gz
-    column_name = nifti_file_path.name[: -len(NIFTI_FILE_ENDING)]
-
-    os.remove(nifti_file_path)
-    return column_name, non_zero_pixels
-
-
 def getLabelsFromNiftiImage(image):
     xml_content = image.header.extensions[0].get_content()
     root = ET.fromstring(xml_content)
@@ -85,6 +71,7 @@ def calculateSegmentationVolumes(image):
 def processSegmentation(segmentation_df, scan):
     input_path = scan.SliceDirectory
 
+    # Already processed this scan, return the existing segmentation_df
     if (
         len(segmentation_df) != 0
         and input_path in segmentation_df["SliceDirectory"].values
@@ -102,7 +89,7 @@ def processSegmentation(segmentation_df, scan):
 def main():
     dicom_df = readCleanDicomDataFrame()
     segmentation_df = getOrCreateSegmentationDataFrame()
-    
+
     # for i in tqdm(range(2), desc="Processing scans"):
     for i in tqdm(range(len(dicom_df)), desc="Processing scans"):
         segmentation_df = processSegmentation(segmentation_df, dicom_df.iloc[i])
@@ -110,7 +97,7 @@ def main():
         if i % 10 == 0:
             segmentation_df.to_feather(PATH_TO_SEGMENTATION_DF, version=2, compression="zstd")
             logger.info(f"Temporary DataFrame saved to '{PATH_TO_SEGMENTATION_DF}' successfully!")
-        
+
     segmentation_df.to_feather(PATH_TO_SEGMENTATION_DF, version=2, compression="zstd")
     logger.info(f"DataFrame saved to '{PATH_TO_SEGMENTATION_DF}' successfully!")
 
