@@ -12,9 +12,7 @@ import xml.etree.ElementTree as ET
 
 PATH_TO_DATA_DIR = Path(__file__).resolve().parent.parent / "Data"
 PATH_TO_CLEANED_DICOM_DF = PATH_TO_DATA_DIR / "cleaned_dicom_df.feather"
-PATH_TO_SEGMENTATION_DIR = PATH_TO_DATA_DIR / "temp" / "segmentation"
 PATH_TO_SEGMENTATION_DF = PATH_TO_DATA_DIR / "segmentation_df.feather"
-NIFTI_FILE_ENDING = ".nii.gz"
 
 # Configure the logger
 logging.basicConfig(
