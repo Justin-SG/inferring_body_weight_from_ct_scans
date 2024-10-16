@@ -61,6 +61,11 @@ def parse_model_name(model_name):
     parts = model_name.replace(".pth", "").split("_")
     backend = parts[0]
     dataset_name = parts[-1]
+    if  "spacing" in parts:
+        dataset_name = "_".join(parts[-3:])
+    elif "scaling" in parts:
+        dataset_name = "_".join(parts[-2:])
+
 
     # Check for scale multiplied
     scale_multiplied = "scale_multiplied" in parts
