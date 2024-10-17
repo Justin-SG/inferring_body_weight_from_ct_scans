@@ -6,6 +6,9 @@ import logging
 from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 import feather
+from torchvision import models
+from torchvision.models import ResNet18_Weights, ResNet50_Weights, ResNet152_Weights, ViT_B_16_Weights, ViT_B_32_Weights
+import torch.nn as nn
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -72,6 +75,8 @@ def parse_model_name(model_name):
 
     # Extract additional params
     additional_params = [param for param in parts if param not in ["scale_multiplied", backend, dataset_name]]
+    # remove duplicates
+    additional_params = list(dict.fromkeys(additional_params))
 
     # Select the dataset
     if dataset_name in datasets:
@@ -86,14 +91,38 @@ def parse_model_name(model_name):
     return backend, dataset, scale_multiplied, additional_params
 
 
+def get_model(model_name, pretrained=True, with_regression_layer=False):
+    """Load a pretrained model."""
+    model_mapping = {
+        "resnet18": models.resnet18(weights=ResNet18_Weights.DEFAULT if pretrained else None),
+        "resnet50": models.resnet50(weights=ResNet50_Weights.DEFAULT if pretrained else None),
+        "resnet152": models.resnet152(weights=ResNet152_Weights.DEFAULT if pretrained else None),
+        "vit_b_16": models.vit_b_16(weights=ViT_B_16_Weights.DEFAULT if pretrained else None),
+        "vit_b_32": models.vit_b_32(weights=ViT_B_32_Weights.DEFAULT if pretrained else None)
+    }
+
+    if model_name not in model_mapping:
+        raise ValueError(f"Model name '{model_name}' not recognized.")
+
+    model = model_mapping[model_name]
+
+    if with_regression_layer:
+        if 'vit' in model_name:
+            model.heads.head = nn.Linear(model.heads.head.in_features, 1)
+        else:
+            model.fc = nn.Linear(model.fc.in_features, 1)
+
+    return model
+
+
 # Function to load model
 def load_model(model_path, backend, scale_multiplied, additional_params):
     if scale_multiplied:
-        model = CtMultipliedScaleWeightRegressor2D(backend=backend)
+        model = CtMultipliedScaleWeightRegressor2D(backend_model=get_model(backend, pretrained=False))
     elif additional_params:
-        model = CtWeightRegressorAdditionalParams2D(backend=backend, additional_params=additional_params)
+        model = CtWeightRegressorAdditionalParams2D(backend_model=get_model(backend, pretrained=False), num_additional_params=len(additional_params))
     else:
-        model = CtWeightRegressorAdditionalParams2D(backend=backend)
+        model = get_model(backend, with_regression_layer=True)
 
     model.load_state_dict(torch.load(model_path))
     model.eval()
@@ -141,12 +170,15 @@ def predict_and_save_results():
         )
 
         # Create data loaders with batch size 1 (for single-sample prediction)
-        train_loader = DataLoader(train_dataset, batch_size=1, shuffle=False)
-        val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
+        train_loader = DataLoader(train_dataset, batch_size=1)
+        val_loader = DataLoader(val_dataset, batch_size=1)
+
+
+
 
         # Prediction for both training and validation sets
         for loader, set_type in [(train_loader, 'Train'), (val_loader, 'Validation')]:
-            for data in loader:
+            for i, data in enumerate(loader):
                 if additional_params or scale_multiplied:
                     inputs, params, targets = data
                     inputs, params, targets = inputs.to(device), params.to(device), targets.to(device)
@@ -164,8 +196,12 @@ def predict_and_save_results():
                     'true_weight': true_weight,
                     'predicted_weight': predicted_weight,
                     'set_type': set_type,
-                    'additional_params': '_'.join(additional_params) if additional_params else None
+                    'patient_id': dataset.dicom_df.loc[loader.dataset.indices[i]].PatientId,
+                    'pixel_array_file': dataset.dicom_df.loc[loader.dataset.indices[i]].PixelArrayFile
                 })
+                # TODO get correct row from dataset
+                # query keeps indices from original dataframe 1, 4, 6, 7, 13,...
+                # indices from dataset 0, 1, 2, 3, 4, ...
 
         # Save results to Feather file after each model
         df_results = pd.concat([df_results, pd.DataFrame(results)], ignore_index=True)
