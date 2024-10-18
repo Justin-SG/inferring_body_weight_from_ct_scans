@@ -26,6 +26,10 @@ from CT_Datasets import CtScanDataset, CtScanDatasetExtended
 from Transforms import Transforms
 from CustomModels import CtWeightRegressorAdditionalParams2D, CtMultipliedScaleWeightRegressor2D
 
+# ignore warnings
+import warnings
+warnings.filterwarnings("ignore")
+
 # Define the datasets
 query = 'BodyPart == "Stamm"'
 datasets = {
