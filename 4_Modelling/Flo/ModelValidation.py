@@ -63,18 +63,21 @@ datasets_scaling_thickness_spacing = {
 def parse_model_name(model_name):
     parts = model_name.replace(".pth", "").split("_")
     backend = parts[0]
+    if backend == "vit":
+        backend += f"_{parts[1]}_{parts[2]}"
+
     dataset_name = parts[-1]
     if  "spacing" in parts:
-        dataset_name = "_".join(parts[-3:])
+        dataset_name = "_".join(parts[-4:])
     elif "scaling" in parts:
         dataset_name = "_".join(parts[-2:])
 
 
     # Check for scale multiplied
-    scale_multiplied = "scale_multiplied" in parts
+    scale_multiplied = "scale" and "multiplied" in parts
 
     # Extract additional params
-    additional_params = [param for param in parts if param not in ["scale_multiplied", backend, dataset_name]]
+    additional_params = [param for param in parts if param not in [backend, "vit", "16", "32", "b", "scale", "factor", "multiplied", "coronal", "sagittal", "axial", "spacing", "thickness"]]
     # remove duplicates
     additional_params = list(dict.fromkeys(additional_params))
 
@@ -170,11 +173,8 @@ def predict_and_save_results():
         )
 
         # Create data loaders with batch size 1 (for single-sample prediction)
-        train_loader = DataLoader(train_dataset, batch_size=1)
-        val_loader = DataLoader(val_dataset, batch_size=1)
-
-
-
+        train_loader = DataLoader(train_dataset, batch_size=1, shuffle=False)
+        val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
 
         # Prediction for both training and validation sets
         for loader, set_type in [(train_loader, 'Train'), (val_loader, 'Validation')]:
@@ -199,9 +199,6 @@ def predict_and_save_results():
                     'patient_id': dataset.dicom_df.loc[loader.dataset.indices[i]].PatientId,
                     'pixel_array_file': dataset.dicom_df.loc[loader.dataset.indices[i]].PixelArrayFile
                 })
-                # TODO get correct row from dataset
-                # query keeps indices from original dataframe 1, 4, 6, 7, 13,...
-                # indices from dataset 0, 1, 2, 3, 4, ...
 
         # Save results to Feather file after each model
         df_results = pd.concat([df_results, pd.DataFrame(results)], ignore_index=True)

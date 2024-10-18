@@ -19,7 +19,8 @@ class CtScanDataset(Dataset):
 
         # Apply query if given
         if df_query:
-            self.dicom_df = self.dicom_df.query(df_query)
+            self.dicom_df.query(df_query, inplace=True)
+            self.dicom_df.reset_index(drop=True, inplace=True)
 
         # Apply transformations
         self.transform = transform
@@ -62,7 +63,8 @@ class CtScanDatasetExtended(Dataset):
 
         # Apply query if given
         if df_query:
-            self.dicom_df = self.dicom_df.query(df_query)
+            self.dicom_df.query(df_query, inplace=True)
+            self.dicom_df.reset_index(drop=True, inplace=True)
 
         # Additional feature flags
         self.additional_features = additional_features
