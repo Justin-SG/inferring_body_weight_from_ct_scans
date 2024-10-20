@@ -8,3 +8,6 @@
 *.nii.gz
 
 .vscode
+
+# Ignore all .pth files
+*.pth
