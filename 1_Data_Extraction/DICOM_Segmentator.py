@@ -67,18 +67,14 @@ def calculateSegmentationVolumes(image):
 
 
 def processSegmentation(segmentation_df, scan):
-    input_path = scan.SliceDirectory
-
     # Already processed this scan, return the existing segmentation_df
-    if (
-        len(segmentation_df) != 0
-        and input_path in segmentation_df["SliceDirectory"].values
-    ):
+    if ( len(segmentation_df) != 0 and scan.StudyInstanceUID in segmentation_df["StudyInstanceUID"].values ):
         return segmentation_df
 
+    input_path = scan.SliceDirectory
     nifti_image = totalsegmentator(input_path, output=None, fastest=True)
     segmentation_volumes = calculateSegmentationVolumes(nifti_image)
-    segmentation_volumes["SliceDirectory"] = input_path
+    segmentation_volumes["StudyInstanceUID"] = scan.StudyInstanceUID
 
     temp_df = pd.DataFrame([segmentation_volumes])
     segmentation_df = pd.concat([segmentation_df, temp_df], ignore_index=True)

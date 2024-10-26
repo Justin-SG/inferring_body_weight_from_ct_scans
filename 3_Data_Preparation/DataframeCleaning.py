@@ -33,7 +33,8 @@ if __name__ == '__main__':
     # Get only the columns we need
     logger.info("Selecting the necessary columns...")
     desired_columns = ["PatientId", "PatientAge", "PatientSex", "PatientWeight", "PatientSize", "BodyPart", "Rows",
-                         "Columns", "SliceCount", "PixelSpacing", "SliceThickness", "PixelArrayFile", "SliceDirectory"]
+                         "Columns", "SliceCount", "PixelSpacing", "SliceThickness", "PixelArrayFile",
+                         "RescaleSlope", "RescaleIntercept", "StudyInstanceUID", "SliceDirectory"]
     valid_columns = [col for col in desired_columns if col in dicom_df.columns]
     dicom_df = dicom_df[valid_columns]
 
