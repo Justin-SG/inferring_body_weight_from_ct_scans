@@ -98,6 +98,17 @@ def main():
         bincount_STEP_75_df = processBincount(bincount_STEP_75_df, dicom_df.iloc[i], BINS_STEP_75, False)
         bincount_STEP_150_df = processBincount(bincount_STEP_150_df, dicom_df.iloc[i], BINS_STEP_150, False)
 
+         # Every 10 scans, save the dataframes to a feather file
+        if i % 10 == 0:
+            bincount_HU_df.to_feather(PATH_TO_BINCOUNT_HU_DF, version=2, compression="zstd")
+            logger.info(f"Temporary DataFrame saved to '{PATH_TO_BINCOUNT_HU_DF}' successfully!")
+
+            bincount_STEP_75_df.to_feather(PATH_TO_BINCOUNT_STEP_75_DF, version=2, compression="zstd")
+            logger.info(f"Temporary DataFrame saved to '{PATH_TO_BINCOUNT_STEP_75_DF}' successfully!")
+
+            bincount_STEP_150_df.to_feather(PATH_TO_BINCOUNT_STEP_150_DF, version=2, compression="zstd")
+            logger.info(f"Temporary DataFrame saved to '{PATH_TO_BINCOUNT_STEP_150_DF}' successfully!")
+
     bincount_HU_df.to_feather(PATH_TO_BINCOUNT_HU_DF, version=2, compression="zstd")
     logger.info(f"DataFrame saved to '{PATH_TO_BINCOUNT_HU_DF}' successfully!")
 
