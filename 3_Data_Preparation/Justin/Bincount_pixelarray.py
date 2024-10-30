@@ -68,7 +68,7 @@ def processBincount(bincount_df, scan_metadata, bins, apply_rescale_slope_interc
         return bincount_df
 
     pixel_array = np.load(scan_metadata.PixelArrayFile).flatten()
-    
+
     if apply_rescale_slope_intercept:
         pixel_array = (
             pixel_array * scan_metadata.RescaleSlope
@@ -91,18 +91,18 @@ def main():
     bincount_STEP_75_df = getOrCreateBincountDataFrame(PATH_TO_BINCOUNT_STEP_75_DF)
     bincount_STEP_150_df = getOrCreateBincountDataFrame(PATH_TO_BINCOUNT_STEP_150_DF)
 
-    for i in tqdm(range(2), desc="Processing scans"):
-    # for i in tqdm(range(len(dicom_df)), desc="Processing scans"):
+    #for i in tqdm(range(2), desc="Processing scans"):
+    for i in tqdm(range(len(dicom_df)), desc="Processing scans"):
         bincount_HU_df = processBincount(bincount_HU_df, dicom_df.iloc[i], BINS_HU, True)
         bincount_STEP_75_df = processBincount(bincount_STEP_75_df, dicom_df.iloc[i], BINS_STEP_75, False)
         bincount_STEP_150_df = processBincount(bincount_STEP_150_df, dicom_df.iloc[i], BINS_STEP_150, False)
 
     bincount_HU_df.to_feather(PATH_TO_BINCOUNT_HU_DF, version=2, compression="zstd")
     logger.info(f"DataFrame saved to '{PATH_TO_BINCOUNT_HU_DF}' successfully!")
-    
+
     bincount_STEP_75_df.to_feather(PATH_TO_BINCOUNT_STEP_75_DF, version=2, compression="zstd")
     logger.info(f"DataFrame saved to '{PATH_TO_BINCOUNT_STEP_75_DF}' successfully!")
-    
+
     bincount_STEP_150_df.to_feather(PATH_TO_BINCOUNT_STEP_150_DF, version=2, compression="zstd")
     logger.info(f"DataFrame saved to '{PATH_TO_BINCOUNT_STEP_150_DF}' successfully!")
 
