@@ -20,6 +20,7 @@ PATH_TO_CLEANED_DICOM_DF = PATH_TO_DATA_DIR / "cleaned_dicom_df.feather"
 PATH_TO_BINCOUNT_HU_DF = PATH_TO_DATA_DIR / "bincount_HU_df.feather"
 PATH_TO_BINCOUNT_STEP_75_DF = PATH_TO_DATA_DIR / "bincount_STEP_75_df.feather"
 PATH_TO_BINCOUNT_STEP_150_DF = PATH_TO_DATA_DIR / "bincount_STEP_150_df.feather"
+PATH_PIXEL_ARRAYS = PATH_TO_DATA_DIR / 'PixelArray'
 
 # https://en.wikipedia.org/wiki/Hounsfield_scale
 BINS_HU = {
@@ -67,7 +68,7 @@ def processBincount(bincount_df, scan_metadata, bins, apply_rescale_slope_interc
     if ( len(bincount_df) != 0 and scan_metadata.SeriesInstanceUID in bincount_df["SeriesInstanceUID"].values ):
         return bincount_df
 
-    pixel_array = np.load(scan_metadata.PixelArrayFile).flatten()
+    pixel_array = np.load( PATH_PIXEL_ARRAYS / scan_metadata.PixelArrayFile).flatten()
 
     if apply_rescale_slope_intercept:
         pixel_array = (
