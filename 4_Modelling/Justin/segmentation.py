@@ -68,24 +68,25 @@ merged_segmentation_150_df.loc[:, 'VoxelVolume'] = (merged_segmentation_150_df['
 def apply_voxel_volume(row, voxel_columns):
     return row[voxel_columns] * row['VoxelVolume']
 
+
 transformed_segmentation_df = merged_segmentation_df.copy()
 transformed_segmentation_Air_df = merged_segmentation_Air_df.copy()
 transformed_segmentation_HU_df = merged_segmentation_HU_df.copy()
 transformed_segmentation_75_df = merged_segmentation_75_df.copy()
 transformed_segmentation_150_df = merged_segmentation_150_df.copy()
 
-transformed_segmentation_df[voxel_columns_segmentation] = merged_segmentation_df.apply(lambda row: apply_voxel_volume(row, voxel_columns_segmentation), axis=1)
-transformed_segmentation_Air_df[voxel_columns_segmentation] = merged_segmentation_Air_df.apply(lambda row: apply_voxel_volume(row, voxel_columns_segmentation), axis=1)
-transformed_segmentation_HU_df[voxel_columns_segmentation] = merged_segmentation_HU_df.apply(lambda row: apply_voxel_volume(row, voxel_columns_segmentation), axis=1)
-transformed_segmentation_75_df[voxel_columns_segmentation] = merged_segmentation_75_df.apply(lambda row: apply_voxel_volume(row, voxel_columns_segmentation), axis=1)
-transformed_segmentation_150_df[voxel_columns_segmentation] = merged_segmentation_150_df.apply(lambda row: apply_voxel_volume(row, voxel_columns_segmentation), axis=1)
+def transform_segmentation_df(df, voxel_columns):
+    transformed_voxel_values = df[voxel_columns].apply(lambda row: apply_voxel_volume(row, voxel_columns), axis=1)
+    patient_sex_encoded = df['PatientSex'].map({'F': 0, 'M': 1}).rename('PatientSex_encoded')
+    return pd.concat([df, transformed_voxel_values, patient_sex_encoded], axis=1)
 
 
-transformed_segmentation_df['PatientSex_encoded'] =  transformed_segmentation_df['PatientSex'].map({'F': 0, 'M': 1}).copy()
-transformed_segmentation_Air_df['PatientSex_encoded'] =  transformed_segmentation_Air_df['PatientSex'].map({'F': 0, 'M': 1}).copy()
-transformed_segmentation_HU_df['PatientSex_encoded'] =  transformed_segmentation_HU_df['PatientSex'].map({'F': 0, 'M': 1}).copy()
-transformed_segmentation_75_df['PatientSex_encoded'] =  transformed_segmentation_75_df['PatientSex'].map({'F': 0, 'M': 1}).copy()
-transformed_segmentation_150_df['PatientSex_encoded'] =  transformed_segmentation_150_df['PatientSex'].map({'F': 0, 'M': 1}).copy()
+transformed_segmentation_df = transform_segmentation_df(transformed_segmentation_df, voxel_columns_segmentation)
+transformed_segmentation_Air_df = transform_segmentation_df(transformed_segmentation_Air_df, voxel_columns_segmentation)
+transformed_segmentation_HU_df = transform_segmentation_df(transformed_segmentation_HU_df, voxel_columns_segmentation)
+transformed_segmentation_75_df = transform_segmentation_df(transformed_segmentation_75_df, voxel_columns_segmentation)
+transformed_segmentation_150_df = transform_segmentation_df(transformed_segmentation_150_df, voxel_columns_segmentation)
+
 
 
 base_columns_to_drop = ['PatientWeight', 'PatientId','Rows', 'Columns', 'RescaleSlope', 'RescaleIntercept', 'SeriesInstanceUID', 'SliceDirectory', 'PixelArrayFile', 'BodyPart', 'PixelSpacing', 'SliceThickness', 'PatientSex', 'set_type'] # These columns wont be used in training
