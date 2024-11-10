@@ -12,7 +12,6 @@
 # Ignore all .pth files
 *.pth
 
-
 # Node projects
 # Node.js
 node_modules/
@@ -40,3 +39,5 @@ logs
 
 # Environment variables
 .env*
+
+Model/*
