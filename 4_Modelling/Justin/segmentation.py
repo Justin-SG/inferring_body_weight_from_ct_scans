@@ -113,7 +113,7 @@ def find_best_model_bayes(X, y):
     }
 
     gb = GradientBoostingRegressor()
-    bayes_search = BayesSearchCV(estimator=gb, search_spaces=param_space, n_iter=256, cv=8, n_jobs=-1, verbose=2, scoring='neg_mean_absolute_error')
+    bayes_search = BayesSearchCV(estimator=gb, search_spaces=param_space, n_iter=128, cv=5, n_jobs=-1, verbose=2, scoring='neg_mean_absolute_error')
     bayes_search.fit(X, y)
     
     print(bayes_search.best_params_)
