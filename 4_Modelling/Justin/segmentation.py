@@ -76,16 +76,16 @@ transformed_segmentation_75_df = merged_segmentation_75_df.copy()
 transformed_segmentation_150_df = merged_segmentation_150_df.copy()
 
 def transform_segmentation_df(df, voxel_columns):
-    transformed_voxel_values = df[voxel_columns].apply(lambda row: apply_voxel_volume(row, voxel_columns), axis=1)
+    transformed_voxel_values = df.apply(lambda row: apply_voxel_volume(row, voxel_columns), axis=1)
     patient_sex_encoded = df['PatientSex'].map({'F': 0, 'M': 1}).rename('PatientSex_encoded')
     return pd.concat([df, transformed_voxel_values, patient_sex_encoded], axis=1)
 
 
 transformed_segmentation_df = transform_segmentation_df(transformed_segmentation_df, voxel_columns_segmentation)
-transformed_segmentation_Air_df = transform_segmentation_df(transformed_segmentation_Air_df, voxel_columns_segmentation)
-transformed_segmentation_HU_df = transform_segmentation_df(transformed_segmentation_HU_df, voxel_columns_segmentation)
-transformed_segmentation_75_df = transform_segmentation_df(transformed_segmentation_75_df, voxel_columns_segmentation)
-transformed_segmentation_150_df = transform_segmentation_df(transformed_segmentation_150_df, voxel_columns_segmentation)
+transformed_segmentation_Air_df = transform_segmentation_df(transformed_segmentation_Air_df, voxel_columns_Air)
+transformed_segmentation_HU_df = transform_segmentation_df(transformed_segmentation_HU_df, voxel_columns_HU)
+transformed_segmentation_75_df = transform_segmentation_df(transformed_segmentation_75_df, voxel_columns_75)
+transformed_segmentation_150_df = transform_segmentation_df(transformed_segmentation_150_df, voxel_columns_150)
 
 
 
