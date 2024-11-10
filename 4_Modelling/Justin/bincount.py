@@ -68,11 +68,11 @@ transformed_75_df['PatientSex_encoded'] = transformed_75_df['PatientSex'].map({'
 transformed_150_df['PatientSex_encoded'] = transformed_150_df['PatientSex'].map({'F': 0, 'M': 1})
 
 
-base_columns_to_drop = ['PatientWeight', 'PatientId','Rows', 'Columns', 'RescaleSlope', 'RescaleIntercept', 'SeriesInstanceUID', 'SliceDirectory', 'BodyPart', 'PixelSpacing', 'SliceThickness', 'PatientSex', 'set_type'] # These columns wont be used in training
+base_columns_to_drop = ['PatientWeight', 'PatientId','Rows', 'Columns', 'RescaleSlope', 'RescaleIntercept', 'SeriesInstanceUID', 'SliceDirectory', 'PixelArrayFile', 'BodyPart', 'PixelSpacing', 'SliceThickness', 'PatientSex', 'set_type'] # These columns wont be used in training
 
-cleaned_HU_df = transformed_HU_df.drop(columns=base_columns_to_drop)
-cleaned_75_df = transformed_75_df.drop(columns=base_columns_to_drop)
-cleaned_150_df = transformed_150_df.drop(columns=base_columns_to_drop)
+cleaned_HU_df = transformed_HU_df.drop(columns=base_columns_to_drop, errors='ignore')
+cleaned_75_df = transformed_75_df.drop(columns=base_columns_to_drop, errors='ignore')
+cleaned_150_df = transformed_150_df.drop(columns=base_columns_to_drop, errors='ignore')
 
 
 

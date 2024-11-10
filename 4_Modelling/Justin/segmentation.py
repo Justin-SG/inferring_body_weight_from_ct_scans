@@ -88,13 +88,13 @@ transformed_segmentation_75_df['PatientSex_encoded'] =  transformed_segmentation
 transformed_segmentation_150_df['PatientSex_encoded'] =  transformed_segmentation_150_df['PatientSex'].map({'F': 0, 'M': 1}).copy()
 
 
-base_columns_to_drop = ['PatientWeight', 'PatientId','Rows', 'Columns', 'RescaleSlope', 'RescaleIntercept', 'SeriesInstanceUID', 'SliceDirectory', 'BodyPart', 'PixelSpacing', 'SliceThickness', 'PatientSex', 'set_type'] # These columns wont be used in training
+base_columns_to_drop = ['PatientWeight', 'PatientId','Rows', 'Columns', 'RescaleSlope', 'RescaleIntercept', 'SeriesInstanceUID', 'SliceDirectory', 'PixelArrayFile', 'BodyPart', 'PixelSpacing', 'SliceThickness', 'PatientSex', 'set_type'] # These columns wont be used in training
 
-cleaned_segmentation_df = transformed_segmentation_df.drop(columns=base_columns_to_drop)
-cleaned_segmentation_Air_df = transformed_segmentation_Air_df.drop(columns=base_columns_to_drop)
-cleaned_segmentation_HU_df = transformed_segmentation_HU_df.drop(columns=base_columns_to_drop)
-cleaned_segmentation_75_df = transformed_segmentation_75_df.drop(columns=base_columns_to_drop)
-cleaned_segmentation_150_df = transformed_segmentation_150_df.drop(columns=base_columns_to_drop)
+cleaned_segmentation_df = transformed_segmentation_df.drop(columns=base_columns_to_drop, errors='ignore')
+cleaned_segmentation_Air_df = transformed_segmentation_Air_df.drop(columns=base_columns_to_drop, errors='ignore')
+cleaned_segmentation_HU_df = transformed_segmentation_HU_df.drop(columns=base_columns_to_drop, errors='ignore')
+cleaned_segmentation_75_df = transformed_segmentation_75_df.drop(columns=base_columns_to_drop, errors='ignore')
+cleaned_segmentation_150_df = transformed_segmentation_150_df.drop(columns=base_columns_to_drop, errors='ignore')
 
 
 
