@@ -1,7 +1,5 @@
 from pathlib import Path
-import os
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.ensemble import GradientBoostingRegressor
 from skopt import BayesSearchCV
 from skopt.space import Real, Categorical, Integer
