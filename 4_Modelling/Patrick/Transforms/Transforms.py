@@ -48,7 +48,7 @@ class CNN3DPreprocessor:
         x = x[:, :, np.newaxis]
 
         # Convert to PyTorch tensor
-        x = torch.from_numpy(x)
+        #x = torch.from_numpy(x)
         
         # Permute dimensions from D x W x C x H to C x W x H x D
         x = np.transpose(x, (2, 1, 3, 0))  # Adjust to PyTorch tensor permutation if needed

@@ -28,3 +28,5 @@ class ResNetRegression(nn.Module):
         # Regression output
         x = self.fc(x)
         
+        return x
+        
