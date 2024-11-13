@@ -6,10 +6,11 @@ from pathlib import Path
 
 
 class CtScanDataset(Dataset):
-    def __init__(self, df_query=None, transform=None):
+    def __init__(self, df_query=None, transform=None, return_tensor=False):
         """
         :param df_query: query to apply to the DICOM metadata (eg. query only abdomen scans)
         :param transform: transformations to apply to the scan arrays
+        :param return_tensor: if True, the pixel arrays and target will be converted to tensors
         """
         project_dir = Path(__file__).resolve().parent.parent
 
@@ -24,6 +25,9 @@ class CtScanDataset(Dataset):
 
         # Apply transformations
         self.transform = transform
+
+        # Return tensors
+        self.return_tensor = return_tensor
 
     def __len__(self):
         return len(self.dicom_df)
@@ -42,6 +46,9 @@ class CtScanDataset(Dataset):
 
         if self.transform:
             pixel_array = self.transform(pixel_array)
+
+        if self.return_tensor:
+            weight = torch.tensor(weight, dtype=torch.float32)
 
         return pixel_array, weight
 

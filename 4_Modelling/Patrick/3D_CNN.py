@@ -5,7 +5,6 @@ import logging
 from pathlib import Path
 from fastai.vision.all import *
 from fastai.callback.tracker import EarlyStoppingCallback
-from omegaconf import DictConfig
 from timm import create_model
 from sklearn.metrics import confusion_matrix, classification_report
 import matplotlib.pyplot as plt
@@ -13,8 +12,8 @@ import pandas as pd
 import seaborn as sns
 import torch
 from fastai.callback.progress import ProgressCallback
-from fastai.data.transforms import RandomSplitter
 from fastai.metrics import mae  # mean absolute error
+from torch.utils.data import random_split
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -56,17 +55,16 @@ parser.add_argument('--model', choices=['resnet_10', 'resnet_18'], default='resn
 
 args = parser.parse_args()
 
-
-
 # Load Dataset
 def get_dataloaders(query, batch_size, transforms, num_workers=2):
     logger.info("Loading datasets...")
-    dataset = CtScanDataset(query, transform=transforms)
-    # Define the random splitter
-    splitter = RandomSplitter(valid_pct=0.2, seed=42)
+    dataset = CtScanDataset(query, transform=transforms, return_tensor=True)
 
-    # Get train and validation indices
-    train_dataset, val_dataset = splitter(range(len(dataset)))
+    train_dataset, val_dataset = random_split(
+        dataset,
+        [int(0.8 * len(dataset)), len(dataset) - int(0.8 * len(dataset))],
+        generator=torch.Generator().manual_seed(42)
+    )
 
     train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     val_dl = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
@@ -106,48 +104,22 @@ def save_loss_curve(learn, model_type):
     plt.close()
     logger.info(f"Loss curve plot saved at {loss_curve_filename}")
 
-# Define a custom loss function that matches your criterion
-class CustomLoss:
-    def __init__(self, criterion):
-        self.criterion = criterion
-    
-    def __call__(self, outputs, targets):
-        return self.criterion(outputs, targets.unsqueeze(1))
-
-# Define a custom DataLoader or Dataset to handle additional parameters
-# Assume `train_dl` and `val_dl` handle the `additional_params` if required
-
-# Custom training loop to track max absolute error and train/val losses
-class MaxAbsErrorCallback(Callback):
-    def __init__(self):
-        super().__init__()
-        self.max_abs_error = 0.0
-    
-    def after_batch(self):
-        # Calculate max absolute error
-        abs_error = torch.abs(self.pred - self.y)
-        self.max_abs_error = max(self.max_abs_error, abs_error.max().item())
-
-    def after_epoch(self):
-        # Log max absolute error after each epoch
-        print(f"Max Abs Error for Epoch {self.epoch + 1}: {self.max_abs_error:.4f}")
-        self.max_abs_error = 0.0  # Reset for the next epoch
-
 # Train Model
 def train_model(query, model_type, epochs, batch_size, learning_rate, patience):
     model = get_model(model_type)
-    dataloaders = get_dataloaders(query, batch_size, Transforms.cnn_3d())
+    transforms = Transforms.CNN3DPreprocessor()
+    dataloaders = get_dataloaders(query, batch_size, transforms)
     train_dl, val_dl = dataloaders
 
     logger.info("Starting training process...")
     learn = Learner(
         dls=DataLoaders(train_dl, val_dl),
         model=model,
-        loss_func=nn.L1Loss(),
+        loss_func=L1LossFlat(),
         metrics=[mae],
         cbs=[
             ProgressCallback(),
-            CSVLogger(fname=stats_dir / f"{model_type}_training_logs.csv", append=False),
+            CSVLogger(fname=stats_dir / f"{model_type}_training_logs.csv", append=True),
             EarlyStoppingCallback(monitor='valid_loss', patience=patience),
             SaveModelCallback(monitor='valid_loss', fname=model_dir / f"{model_type}_best")
         ]
