@@ -88,3 +88,46 @@ class CtMultipliedScaleWeightRegressor2D(nn.Module):
         # Pass the scaled features through the fully connected layers
         output = self.fc(scaled_features)
         return output
+    
+class CtWeightRegressorGlobAvPool(nn.Module):
+    def __init__(self, backend_model, fc_layers=[128, 64, 32]):
+        super(CtWeightRegressorGlobAvPool, self).__init__()
+
+        # Assume the backend model is already instantiated and passed as an argument
+        self.backend = backend_model
+
+        # Determine the feature dimension based on the backend model
+        if hasattr(self.backend, 'fc'):  # e.g., ResNet
+            self.feature_dim = self.backend.fc.in_features
+            self.backend.fc = nn.Identity()  # Remove the original fully connected layer
+        elif hasattr(self.backend, 'heads'):  # e.g., Vision Transformer
+            self.feature_dim = self.backend.heads.head.in_features
+            self.backend.heads.head = nn.Identity()  # Remove the original fully connected layer
+        else:
+            raise ValueError("Unsupported backend model structure")
+
+        # Add global average pooling layer
+        self.global_avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+
+        # Create the fully connected layers for regression
+        fc_layers_list = []
+        for out_features in fc_layers:
+            fc_layers_list.append(nn.Linear(self.feature_dim, out_features))
+            fc_layers_list.append(nn.ReLU(inplace=True))
+            self.feature_dim = out_features
+
+        # Final output layer: 1 output for the weight regression
+        fc_layers_list.append(nn.Linear(self.feature_dim, 1))
+        self.fc = nn.Sequential(*fc_layers_list)
+
+    def forward(self, x):
+        # Pass input through backend model
+        x = self.backend(x)
+
+        # Apply global average pooling
+        x = self.global_avg_pool(x)
+        x = x.view(x.size(0), -1)  # Flatten the output for the fully connected layers
+
+        # Pass through fully connected layers
+        x = self.fc(x)
+        return x
