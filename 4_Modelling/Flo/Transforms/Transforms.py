@@ -2,7 +2,6 @@ import numpy as np
 from .CustomTransforms import *
 from torchvision.transforms import v2
 
-
 def axial_projection_imagenet_transforms():
     return v2.Compose([
         # change the data type to uint32 -> prevents overflow
@@ -43,6 +42,26 @@ def coronal_projection_imagenet_transforms():
         # Normalize with mean and std
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
+
+class CoronalProjectionImagenetTransforms:
+    def __call__(self, x):
+        # Convert data type to float32 to prevent overflow
+        x = v2.Lambda(lambda x: x.astype(np.float32))(x)
+        # Sum up all pixel values along the second axis (coronal projection)
+        x = v2.Lambda(lambda x: x.sum(axis=1))(x)
+        # Add a color channel dimension
+        x = v2.Lambda(lambda x: x[:, :, np.newaxis])(x)
+        # Repeat the color channel 3 times (RGB)
+        x = v2.Lambda(lambda x: np.repeat(x, 3, axis=2))(x)
+        # Convert to a PIL Image
+        x = v2.ToImage()(x)
+        # Resize the image to 224x224
+        x = v2.Resize((224, 224), antialias=True)(x)
+        # Normalize tensor values to range [0, 1] with lambda function
+        x = ScaleTo01()(x)
+        # Normalize with mean and std
+        x = v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])(x)
+        return x
 
 
 def sagittal_projection_imagenet_transforms():

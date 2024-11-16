@@ -16,6 +16,6 @@ conda activate /home2/phofmann/miniconda/envs/hagrid/
 
 cd /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/4_Modelling/Flo
 
-python 2D_AvPool_CNN.py --model=resnet50 --epochs=10 --batch_size=64 --learning_rate=0.0001 --patience=5
+python 2D_AvPool_CNN.py --model=resnet_50 --epochs=10 --batch_size=64 --learning_rate=0.0001 --patience=5
 
 exit

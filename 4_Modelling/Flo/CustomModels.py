@@ -125,8 +125,8 @@ class CtWeightRegressorGlobAvPool(nn.Module):
         x = self.backend(x)
 
         # Apply global average pooling
-        x = self.global_avg_pool(x)
-        x = x.view(x.size(0), -1)  # Flatten the output for the fully connected layers
+        #x = self.global_avg_pool(x)
+        #x = x.view(x.size(0), -1)  # Flatten the output for the fully connected layers
 
         # Pass through fully connected layers
         x = self.fc(x)
