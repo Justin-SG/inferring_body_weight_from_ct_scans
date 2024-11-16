@@ -37,7 +37,7 @@ stats_dir.mkdir(parents=True, exist_ok=True)
 sys.path.append(str(project_dir / '3_Data_Preparation'))
 
 # Import project-specific modules
-from CT_Datasets import CtScanDataset, CtScanDatasetExtended
+from CT_Datasets import CtScanDataset
 from Transforms import Transforms
 from CustomModels import CtWeightRegressorGlobAvPool
 
@@ -73,7 +73,7 @@ def get_model(model_type):
     logger.info(f"Initializing model: {model_type}")
 
     # Instantiate the new regression model
-    modelpre = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+    modelpre = models.resnet50(weights=ResNet50_Weights.DEFAULT)
 
     # Instantiate the new regression model
     model = CtWeightRegressorGlobAvPool(modelpre)
@@ -98,7 +98,7 @@ def save_loss_curve(learn, model_type):
 # Train Model
 def train_model(query, model_type, epochs, batch_size, learning_rate, patience):
     model = get_model(model_type)
-    transforms = Transforms.sagittal_projection_imagenet_transforms()
+    transforms = Transforms.coronal_projection_imagenet_transforms()
     dataloaders = get_dataloaders(query, batch_size, transforms)
     train_dl, val_dl = dataloaders
 
@@ -129,10 +129,20 @@ def train_model(query, model_type, epochs, batch_size, learning_rate, patience):
     logger.info("Training complete.")
     return learn
 
+# Evaluate Model
+def evaluate_model(learn):
+    logger.info("Starting evaluation...")
+    test_dl = learn.dls[1]
+
+    preds, targs = learn.get_preds(dl=test_dl, save_preds=stats_dir)
+
+    logger.info("Evaluation complete.")
+
 # Main Execution
 if __name__ == "__main__":
     # Define the datasets
     query = 'BodyPart == "Stamm"'
 
     learn = train_model(query, args.model, args.epochs, args.batch_size, args.learning_rate, args.patience)
+    evaluate_model(learn)
     logger.info("Process completed successfully.")
