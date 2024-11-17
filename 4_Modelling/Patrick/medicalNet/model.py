@@ -67,25 +67,19 @@ def generate_model(opt):
                 shortcut_type=opt.resnet_shortcut,
                 no_cuda=opt.no_cuda,
                 num_seg_classes=opt.n_seg_classes)
+            
+    # Use the GPU if available
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
-    if not opt.no_cuda:
-        if len(opt.gpu_id) > 1:
-            model = model.cuda() 
-            model = nn.DataParallel(model, device_ids=opt.gpu_id)
-            net_dict = model.state_dict() 
-        else:
-            import os
-            os.environ["CUDA_VISIBLE_DEVICES"]=str(opt.gpu_id[0])
-            model = model.cuda() 
-            model = nn.DataParallel(model, device_ids=None)
-            net_dict = model.state_dict()
+    if device == 'cuda':
+        model = model.to(device)
     else:
         net_dict = model.state_dict()
     
     # load pretrain
     if opt.phase != 'test' and opt.pretrain_path:
         print ('loading pretrained model {}'.format(opt.pretrain_path))
-        pretrain = torch.load(opt.pretrain_path)
+        pretrain = torch.load(opt.pretrain_path, map_location=torch.device(device))
         pretrain_dict = {k: v for k, v in pretrain['state_dict'].items() if k in net_dict.keys()}
          
         net_dict.update(pretrain_dict)

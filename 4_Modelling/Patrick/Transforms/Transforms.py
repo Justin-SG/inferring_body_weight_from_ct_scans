@@ -65,3 +65,25 @@ class CNN3DPreprocessor:
         tio.Lambda(rescale_if_nonconstant),
 
         return x
+    
+class CNN3DPreprocessor2:
+    def __call__(self, x):
+        # Change the data type to float32 to prevent overflow
+        x = x.astype(np.float32)
+        
+        # Add a new axis to make the input compatible with expected format
+        x = x[:, :, np.newaxis]
+
+        # Convert to PyTorch tensor
+        x = torch.from_numpy(x)
+
+        # Permute dimensions from D x W x C x H to C x W x H x D
+        x = np.transpose(x, (2, 1, 3, 0))  # Adjust to PyTorch tensor permutation if needed
+        
+        # Resize images to (112, 112, 112)
+        x = tio.Resize((112, 112, 112))(x)
+
+        # Conditionally rescale intensity if the values are non-constant
+        tio.Lambda(rescale_if_nonconstant),
+
+        return x
