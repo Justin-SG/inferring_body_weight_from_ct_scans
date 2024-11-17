@@ -83,6 +83,9 @@ class CNN3DPreprocessor2:
         # Resize images to (224, 224, 112)
         x = tio.Resize((224, 224, 112))(x)
 
+        # Permute dimensions to C x D x W x H 
+        x = np.transpose(x, (0, 3, 1, 2))
+
         # Conditionally rescale intensity if the values are non-constant
         tio.Lambda(rescale_if_nonconstant),
 
