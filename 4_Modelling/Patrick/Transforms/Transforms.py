@@ -80,8 +80,8 @@ class CNN3DPreprocessor2:
         # Permute dimensions from D x W x C x H to C x W x H x D
         x = np.transpose(x, (2, 1, 3, 0))  # Adjust to PyTorch tensor permutation if needed
         
-        # Resize images to (112, 112, 112)
-        x = tio.Resize((112, 112, 112))(x)
+        # Resize images to (224, 224, 112)
+        x = tio.Resize((224, 224, 112))(x)
 
         # Conditionally rescale intensity if the values are non-constant
         tio.Lambda(rescale_if_nonconstant),
