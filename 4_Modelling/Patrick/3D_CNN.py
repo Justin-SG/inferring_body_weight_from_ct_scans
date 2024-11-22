@@ -73,14 +73,18 @@ def get_dataloaders(query, batch_size, transforms, num_workers=2):
     return train_dl, val_dl
 
 # Define Model
-def get_model(model_type):
+def get_model(model_type, model_depth, pretrained):
     logger.info(f"Initializing model: {model_type}")
     # settting
     sets = Options()
     sets.target_type = "normal"
-    sets.phase = 'test'
+    sets.phase = 'train'
+    sets.model_depth = model_depth
 
-    sets.resume_path = sets.pretrain_path = model_dir / f"{model_type}.pth"
+    if pretrained:
+        sets.resume_path = sets.pretrain_path = model_dir / f"{model_type}.pth"
+    else:
+        sets.resume_path = None
     #checkpoint = torch.load(sets.resume_path)
     net, _ = generate_model(sets)
 
@@ -97,17 +101,67 @@ def get_model(model_type):
 
 def save_loss_curve(learn, model_type):
     logger.info("Saving loss curve plot...")
-    fig, ax = plt.subplots()
     loss_curve_filename = plot_dir / f"{model_type}_loss_curve.png"
-    ax = learn.recorder.plot_loss(show_epochs=True, with_valid=True)
+
+    # Read the CSV file, handling repeated headers as new runs
+    data = pd.read_csv(stats_dir / f"{model_type}_training_logs.csv", comment='#', header=None, names=["epoch", "train_loss", "valid_loss", "mae", "time"])
+
+    # Detect and split new training runs
+    data["new_run"] = data["epoch"] == "epoch"
+    data["run_id"] = data["new_run"].cumsum()
+
+    # Remove rows with header information and reset index
+    data = data[data["epoch"] != "epoch"]
+    data.reset_index(drop=True, inplace=True)
+
+    # Convert numeric columns to proper types
+    data["epoch"] = data["epoch"].astype(int)
+    data[["train_loss", "valid_loss", "mae"]] = data[["train_loss", "valid_loss", "mae"]].astype(float)
+
+    # Reset epoch numbers for each run
+    data["relative_epoch"] = data.groupby("run_id")["epoch"].rank(method="first").astype(int) - 1
+
+    # Plotting
+    plt.figure(figsize=(14, 7))
+    current_x = 0  # Tracks the x-axis position across runs
+    x_ticks = []  # To store x-tick positions
+    x_labels = []  # To store x-tick labels
+    first_legend = True
+    for run_id, run_data in data.groupby("run_id"):
+        # Plot train and validation loss for this run
+        train_x = run_data["relative_epoch"] + current_x
+        x_ticks.extend(train_x)
+        x_labels.extend([f"{int(epoch)}: {int(tick)}" for epoch, tick in zip(run_data["relative_epoch"], train_x)])
+
+        # Plot train and validation loss for this run
+        if first_legend:
+            plt.plot(run_data["relative_epoch"] + current_x, run_data["train_loss"], label="Train Loss", color="blue")
+            plt.plot(run_data["relative_epoch"] + current_x, run_data["valid_loss"], linestyle="--", label="Valid Loss", color="orange")
+            first_legend = False
+        else:
+            plt.plot(run_data["relative_epoch"] + current_x, run_data["train_loss"], color="blue")
+            plt.plot(run_data["relative_epoch"] + current_x, run_data["valid_loss"], linestyle="--", color="orange")
+        
+        # Update x-axis position
+        current_x += run_data["relative_epoch"].max()  # Add space between runs
+
+    # Set custom x-ticks and labels
+    plt.xticks(ticks=x_ticks, labels=x_labels, fontsize=8, rotation=90)
+
+    plt.title(f"Loss Curve with Multiple Training Runs: {model_type}")	
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.grid(True)
+
     plt.savefig(loss_curve_filename)
     plt.close()
     logger.info(f"Loss curve plot saved at {loss_curve_filename}")
 
 # Train Model
-def train_model(query, model_type, epochs, batch_size, learning_rate, patience):
-    model = get_model(model_type)
-    transforms = Transforms.CNN3DPreprocessor()
+def train_model(query, model_type, model_depth, pretrained, epochs, batch_size, learning_rate, patience):
+    model = get_model(model_type, model_depth, pretrained)
+    transforms = Transforms.CNN3DPreprocessor2()
     dataloaders = get_dataloaders(query, batch_size, transforms)
     train_dl, val_dl = dataloaders
 
@@ -143,5 +197,5 @@ if __name__ == "__main__":
     # Define the datasets
     query = 'BodyPart == "Stamm"'
 
-    learn = train_model(query, args.model, args.epochs, args.batch_size, args.learning_rate, args.patience)
+    learn = train_model(query, args.model, args.model_depth, args.pretrained, args.epochs, args.batch_size, args.learning_rate, args.patience)
     logger.info("Process completed successfully.")

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH --job-name=train_3d_nn                              # Job name
+#SBATCH --job-name=train_3d_nnn                              # Job name
 #SBATCH --output=Log/%x_%j.out                              # Output file (includes job name and ID)
 #SBATCH --error=Log/%x_%j.err                               # Error file (includes job name and ID)
 #SBATCH --gres=gpu:2                                        # Number of GPUs
@@ -16,6 +16,6 @@ conda activate /home2/phofmann/miniconda/envs/hagrid/
 
 cd /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/4_Modelling/Patrick
 
-python 3D_CNN.py --epochs=20 --batch_size=1 --learning_rate=0.0001 --patience=5
+python 3D_CNN.py --epochs=10 --model=resnet_18 --model_depth=18 --pretrained=true --batch_size=1 --learning_rate=0.0001 --patience=5
 
 exit
