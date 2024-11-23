@@ -52,6 +52,8 @@ parser.add_argument('--learning_rate', type=float, default=1e-3, help="Learning 
 parser.add_argument('--epochs', type=int, default=10, help="Number of epochs for training")
 parser.add_argument('--patience', type=int, default=3, help="Patience for early stopping")
 parser.add_argument('--model', choices=['resnet_10', 'resnet_18'], default='resnet_10', help="Model type to train")
+parser.add_argument('--model_depth', type=int, default=10, help="Model depth for ResNet")
+parser.add_argument('--pretrained', type=bool, default=True, help="Use pretrained model")
 
 args = parser.parse_args()
 
