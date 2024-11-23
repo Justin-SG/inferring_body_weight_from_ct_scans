@@ -125,10 +125,10 @@ class Options:
         self.batch_size = 1
         self.phase = 'train'
         self.save_intervals = 10
-        self.n_epochs = 200
-        self.input_D = 56
-        self.input_H = 448
-        self.input_W = 448
+        self.n_epochs = 10
+        self.input_D = 112
+        self.input_H = 224
+        self.input_W = 224
         self.resume_path = ''
         self.pretrain_path = 'pretrain/resnet_50.pth'
         self.new_layer_names = ['conv_seg']

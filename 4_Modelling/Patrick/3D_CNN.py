@@ -81,7 +81,11 @@ def get_model(model_type, model_depth, pretrained):
     sets.phase = 'train'
     sets.model_depth = model_depth
 
+    logger.info(f"With: {sets.input_W}, Height: {sets.input_H}, Depth: {sets.input_D}")
+    logger.info(f"Model: {sets.model}, Model depth: {sets.model_depth}")
+
     if pretrained:
+        logger.info("Loading pretrained model...")
         sets.resume_path = sets.pretrain_path = model_dir / f"{model_type}.pth"
     else:
         sets.resume_path = None
