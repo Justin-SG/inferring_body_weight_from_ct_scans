@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore")
 
 # Define the datasets
 query = 'BodyPart == "Stamm"'
-dataset = CtScanDataset(query, transform=Transforms.CNN3DPreprocessor())
+dataset = CtScanDataset(query, transform=Transforms.CNN3DPreprocessor2())
 
 
 # Function to parse model name and select the appropriate dataset
