@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH --job-name=Hagrid                                    # Job name
+#SBATCH --job-name=res10                                    # Job name
 #SBATCH --output=Log/%x_%j.out                              # Output file (includes job name and ID)
 #SBATCH --error=Log/%x_%j.err                               # Error file (includes job name and ID)
 #SBATCH --gres=gpu:2                                        # Number of GPUs
