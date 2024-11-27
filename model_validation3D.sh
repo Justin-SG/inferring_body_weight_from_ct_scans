@@ -11,7 +11,7 @@
 
 
 eval "$(conda shell.bash hook)"
-conda activate /home2/jschoenberg/miniconda/envs/infer_body/
+conda activate /home2/phofmann/miniconda/envs/hagrid/
 
 
 cd /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/4_Modelling/Patrick
