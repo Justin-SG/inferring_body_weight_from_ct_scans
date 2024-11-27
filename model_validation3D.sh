@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH --job-name=model_validation                            # Job name
+#SBATCH --job-name=model_validation3D                            # Job name
 #SBATCH --output=Log/%x_%j.out                                  # Output file (includes job name and ID)
 #SBATCH --error=Log/%x_%j.err                                   # Error file (includes job name and ID)
 #SBATCH --gres=gpu:2                                        # Number of GPUs
