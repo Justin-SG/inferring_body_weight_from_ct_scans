@@ -16,6 +16,6 @@ conda activate /home2/phofmann/miniconda/envs/hagrid/
 
 cd /srv/GadM/Datasets/Tmp/inferring_body_weight_from_ct_scans/4_Modelling/Patrick
 
-python 3D_CNN.py --epochs=10 --model=resnet_50 --model_depth=50 --pretrained=false --batch_size=1 --learning_rate=0.0001 --patience=5
+python 3D_CNN.py --epochs=10 --model=resnet_50 --model_depth=50 --pretrained=False --batch_size=1 --learning_rate=0.0001 --patience=5
 
 exit
