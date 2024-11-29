@@ -81,6 +81,7 @@ def predict_and_save_results():
 
     # Get all model files
     model_files = list(model_dir.glob("*best.pth"))
+    logger.info(f"Found {len(model_files)} models to process: {model_files}")
 
     # Load any existing results to continue from where it crashed
     output_file = eval_dir / 'model_predictions.feather'
