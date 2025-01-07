@@ -20,7 +20,7 @@ export default function Dropdown({options, selected, onSelect}: DropdownProps) {
         {selected} <ChevronDown />
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 w-full bg-white rounded mt-1">
+        <div className="absolute top-full text-black left-0 w-full bg-white rounded mt-1">
           {options.map(option => (
             <div
               key={option}
