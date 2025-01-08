@@ -1,7 +1,7 @@
 "use client";
 
 import {useState, useRef, useEffect} from "react";
-import {Play} from "lucide-react";
+import {Play, Weight} from "lucide-react";
 import {motion} from "framer-motion";
 import Dropdown from "./ui/dropdown";
 import Model from "./ui/model";
@@ -20,24 +20,66 @@ const models = [
 ];
 
 const ctScans = [
-  {name: "Scan 1", url: "/ct_scans/Scan1.png", weight: 80.0},
-  {name: "Scan 2", url: "/ct_scans/Scan2.png", weight: 67.0},
-  {name: "Scan 3", url: "/ct_scans/Scan3.png", weight: 85.0},
-  {name: "Scan 4", url: "/ct_scans/Scan4.png", weight: 92.0},
-  {name: "Scan 5", url: "/ct_scans/Scan5.png", weight: 43.0},
-  {name: "Scan 6", url: "/ct_scans/Scan6.png", weight: 110.0},
-  {name: "Scan 7", url: "/ct_scans/Scan7.png", weight: 63.0},
-  {name: "Scan 8", url: "/ct_scans/Scan8.png", weight: 68.0},
-  {name: "Scan 9", url: "/ct_scans/Scan9.png", weight: 79.0},
+  {
+    name: "Scan 1",
+    url: "/ct_scans/Scan1.png",
+    weight: 80.0,
+    prediction: [81.68, 82.78, 81.51, 79.74, 74.75],
+  },
+  {
+    name: "Scan 2",
+    url: "/ct_scans/Scan2.png",
+    weight: 67.0,
+    prediction: [64.87, 64.36, 61.88, 62.41, 70.0],
+  },
+  {
+    name: "Scan 3",
+    url: "/ct_scans/Scan3.png",
+    weight: 85.0,
+    prediction: [82.67, 80.43, 87.38, 84.44, 77.0],
+  },
+  {
+    name: "Scan 4",
+    url: "/ct_scans/Scan4.png",
+    weight: 92.0,
+    prediction: [84.25, 86.83, 93.46, 92.58, 70.0],
+  },
+  {
+    name: "Scan 5",
+    url: "/ct_scans/Scan5.png",
+    weight: 45.0,
+    prediction: [45.29, 44.42, 44.02, 57.2, 71.33],
+  },
+  {
+    name: "Scan 6",
+    url: "/ct_scans/Scan6.png",
+    weight: 110.0,
+    prediction: [105.53, 107.11, 113.05, 98.09, 90.0],
+  },
+  {
+    name: "Scan 7",
+    url: "/ct_scans/Scan7.png",
+    weight: 63.0,
+    prediction: [66.25, 65.47, 73.85, 64.37, 55.67],
+  },
+  {
+    name: "Scan 8",
+    url: "/ct_scans/Scan8.png",
+    weight: 68.0,
+    prediction: [61.27, 62.18, 65.15, 64.5, 57.67],
+  },
+  {
+    name: "Scan 9",
+    url: "/ct_scans/Scan9.png",
+    weight: 79.0,
+    prediction: [80.76, 79.93, 76.79, 79.26, 72.0],
+  },
 ];
 
 export default function CTScanProcessor() {
   const [selectedScan, setSelectedScan] = useState(ctScans[0]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState([
-    "...kg",
-    "...kg",
-    "...kg",
     "...kg",
     "...kg",
     "...kg",
@@ -52,13 +94,16 @@ export default function CTScanProcessor() {
     setOriginal("...kg");
     setResults(["...kg", "...kg", "...kg", "...kg", "...kg"]);
     setTimeout(() => {
-      setResults([
-        distriCalculatro(selectedScan.weight, 10).toFixed(2).toString() + "kg",
-        distriCalculatro(selectedScan.weight, 11).toFixed(2).toString() + "kg",
-        distriCalculatro(selectedScan.weight, 5).toFixed(2).toString() + "kg",
-        distriCalculatro(selectedScan.weight, 3).toFixed(2).toString() + "kg",
-        distriCalculatro(selectedScan.weight, 8).toFixed(2).toString() + "kg",
-      ]);
+      setResults(
+        selectedScan.prediction.map(
+          prediction =>
+            prediction +
+            "kg          " +
+            (selectedScan.weight - prediction > 0 ? "" : "+") +
+            (prediction - selectedScan.weight).toFixed(2) +
+            "kg",
+        ),
+      );
       setIsProcessing(false);
       setOriginal(selectedScan.weight.toString() + "kg");
     }, 3000);
@@ -120,14 +165,14 @@ export default function CTScanProcessor() {
                 <h2 className="text-xl font-bold mb-4 text-black">Results</h2>
                 <div className="mb-2">
                   <span className="font-semibold text-black">Original:</span>
-                  <span className="text-red-500 font-bold ml-2">
+                  <span className="text-green-500 font-bold ml-2">
                     {original}
                   </span>
                 </div>
                 {models.map((name, index) => (
                   <div key={index} className="mb-2">
                     <span className="font-semibold text-black">{name}:</span>
-                    <span className="text-green-500 font-bold ml-2">
+                    <span className="text-blue-500 font-bold ml-2">
                       {results[index]}
                     </span>
                   </div>
